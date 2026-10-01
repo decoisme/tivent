@@ -97,6 +97,27 @@ const EVENT_TICKETING_ABI = [
     outputs: [{ type: 'uint256' }],
   },
   {
+    name: 'createEventWithTypes',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'metadataURI', type: 'string' },
+      { 
+        name: 'ticketTypeInputs', 
+        type: 'tuple[]',
+        components: [
+          { name: 'name', type: 'string' },
+          { name: 'price', type: 'uint256' },
+          { name: 'maxSupply', type: 'uint256' }
+        ]
+      },
+      { name: 'maxTicketsPerWallet', type: 'uint256' },
+      { name: 'resalePriceCap', type: 'uint256' },
+      { name: 'resaleDeadline', type: 'uint256' },
+    ],
+    outputs: [{ type: 'uint256' }],
+  },
+  {
     name: 'buyTicket',
     type: 'function',
     stateMutability: 'payable',
@@ -247,28 +268,51 @@ export function useEventTicketing() {
   // Write functions
   const createEvent = async (
     metadataURI: string,
-    ticketPriceEth: string,
-    maxTickets: number,
-    maxTicketsPerWallet: number,
-    resalePriceCapBps: number,
-    resaleDeadline: number
+    ticketTypesOrPrice: any[] | string,
+    maxTicketsOrPerWallet: number,
+    resalePriceCapBpsOrPerWallet?: number,
+    resaleDeadlineOrCap?: number,
+    resaleDeadlineFinal?: number
   ) => {
-    return writeContract({
-      address: CONTRACT_ADDRESS,
-      abi: EVENT_TICKETING_ABI,
-      functionName: 'createEvent',
-      args: [
-        metadataURI,
-        parseEther(ticketPriceEth),
-        BigInt(maxTickets),
-        BigInt(maxTicketsPerWallet),
-        BigInt(resalePriceCapBps),
-        BigInt(resaleDeadline),
-      ],
-      gas: BigInt(800000), // Higher gas limit for event creation
-      maxFeePerGas: BigInt(250000000000), // 250 Gwei max fee
-      maxPriorityFeePerGas: BigInt(250000000000), // 250 Gwei priority fee
-    });
+    // Check if using new format (ticket types array) or old format (single price)
+    const isMultiType = Array.isArray(ticketTypesOrPrice);
+    
+    if (isMultiType) {
+      // New format: createEventWithTypes
+      return writeContract({
+        address: CONTRACT_ADDRESS,
+        abi: EVENT_TICKETING_ABI,
+        functionName: 'createEventWithTypes',
+        args: [
+          metadataURI,
+          ticketTypesOrPrice, // Array of {name, price, maxSupply}
+          BigInt(maxTicketsOrPerWallet), // maxTicketsPerWallet
+          BigInt(resalePriceCapBpsOrPerWallet!), // resalePriceCap
+          BigInt(resaleDeadlineOrCap!), // resaleDeadline
+        ],
+        gas: BigInt(5000000), // Increased to 5M for multiple types
+        maxFeePerGas: BigInt(250000000000),
+        maxPriorityFeePerGas: BigInt(250000000000),
+      });
+    } else {
+      // Old format: createEvent (backward compatible)
+      return writeContract({
+        address: CONTRACT_ADDRESS,
+        abi: EVENT_TICKETING_ABI,
+        functionName: 'createEvent',
+        args: [
+          metadataURI,
+          parseEther(ticketTypesOrPrice), // ticketPrice
+          BigInt(maxTicketsOrPerWallet), // maxTickets
+          BigInt(resalePriceCapBpsOrPerWallet!), // maxTicketsPerWallet
+          BigInt(resaleDeadlineOrCap!), // resalePriceCap
+          BigInt(resaleDeadlineFinal!), // resaleDeadline
+        ],
+        gas: BigInt(2000000), // 2M for single type
+        maxFeePerGas: BigInt(250000000000),
+        maxPriorityFeePerGas: BigInt(250000000000),
+      });
+    }
   };
 
   const buyTicket = async (

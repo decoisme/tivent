@@ -36,9 +36,7 @@ export default function Home() {
         <div className="dp-container flex items-center justify-between h-[56px]">
           {/* Logo */}
           <div className="flex items-center gap-8">
-            <span className="text-[15px] font-semibold tracking-[-0.02em]" style={{ color: 'var(--text-primary)' }}>
-              DecentraPass
-            </span>
+            <img src="/tivent-logo.png" alt="Tivent" className="h-8 w-auto" />
             {/* Desktop Nav */}
             <div className="hidden md:flex items-center gap-1">
               <button onClick={() => router.push('/events')} className="dp-tab">Explore</button>
@@ -353,7 +351,7 @@ export default function Home() {
         <div className="dp-container">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
             <div>
-              <p className="text-[14px] font-semibold mb-1">DecentraPass</p>
+              <p className="text-[14px] font-semibold mb-1">Tivent</p>
               <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>
                 Verified event ticketing with on-chain ownership.
               </p>

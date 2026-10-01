@@ -16,6 +16,7 @@ import {
   Clock,
   User,
 } from 'lucide-react';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
 
 interface ResaleDetail {
   tokenId: number;
@@ -144,8 +145,8 @@ export default function ResalePurchasePage() {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--bg)' }}>
         <div className="text-center">
-          <Clock size={64} className="mx-auto mb-4 animate-pulse" style={{ color: 'var(--accent)' }} />
-          <p className="text-[14px]" style={{ color: 'var(--text-secondary)' }}>Loading listing...</p>
+          <LoadingSpinner size={48} />
+          <p className="text-[14px] mt-4" style={{ color: 'var(--text-secondary)' }}>Loading listing...</p>
         </div>
       </div>
     );
@@ -176,9 +177,11 @@ export default function ResalePurchasePage() {
   // Success state
   if (isConfirmed) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4" style={{ backgroundColor: 'var(--bg)' }}>
+      <div className="min-h-screen flex items-center justify-center px-4 page-enter-active" style={{ backgroundColor: 'var(--bg)' }}>
         <div className="dp-surface p-12 max-w-md w-full text-center">
-          <CheckCircle2 size={64} className="mx-auto mb-4" style={{ color: 'var(--success)' }} />
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center animate-pulse" style={{ backgroundColor: 'rgba(34, 197, 94, 0.1)' }}>
+            <CheckCircle2 size={32} style={{ color: 'var(--success)' }} />
+          </div>
           <h2 className="text-[28px] font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
             Purchase Successful!
           </h2>
@@ -219,7 +222,7 @@ export default function ResalePurchasePage() {
   const isSeller = address && listing.seller.toLowerCase() === address.toLowerCase();
 
   return (
-    <div className="min-h-screen py-8 px-4" style={{ backgroundColor: 'var(--bg)' }}>
+    <div className="min-h-screen py-8 px-4 page-enter-active" style={{ backgroundColor: 'var(--bg)' }}>
       <div className="dp-container max-w-5xl mx-auto">
         {/* Compact Header */}
         <div className="flex items-center justify-between mb-6">

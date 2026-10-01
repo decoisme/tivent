@@ -7,10 +7,11 @@ import { useEventTicketing } from '@/hooks/useEventTicketing';
 // Fraud detection temporarily disabled (requires Supabase setup)
 // import { useFraudRisk, useTransactionAnalysis } from '@/hooks/useFraudDetection';
 import { formatEther, parseEther } from 'viem';
-import { readEvent } from '@/lib/contractReads';
+import { readEvent, readEventTicketTypes } from '@/lib/contractReads';
 import { FraudWarning, RiskIndicator } from '@/components/RiskBadge';
 import { formatIDR } from '@/lib/currency';
 import { useLivePrice } from '@/hooks/useLivePrice';
+import TicketSuccessModal from '@/components/TicketSuccessModal';
 import {
   ArrowLeft,
   CreditCard,
@@ -29,11 +30,23 @@ import {
   Ticket,
 } from 'lucide-react';
 
+interface TicketTypeInfo {
+  typeId: number;
+  name: string;
+  description: string;
+  priceIDR: number;
+  pricePOL: string;
+  maxSupply: number;
+  sold: number;
+  available: number;
+  active: boolean;
+}
+
 interface EventDetail {
   eventId: number;
   organizer: string;
   metadataURI: string;
-  ticketPrice: bigint;
+  ticketTypesCount: number;
   maxTickets: number;
   ticketsSold: number;
   maxTicketsPerWallet: number;
@@ -49,7 +62,9 @@ interface EventDetail {
     startDate: string;
     endDate: string;
     imageUrl?: string;
+    ticketTypes?: TicketTypeInfo[];
   };
+  ticketTypes: TicketTypeInfo[];
 }
 
 export default function PurchaseTicketPage() {
@@ -72,12 +87,14 @@ export default function PurchaseTicketPage() {
 
   const [event, setEvent] = useState<EventDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedType, setSelectedType] = useState<TicketTypeInfo | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [purchaseError, setPurchaseError] = useState<string>('');
   const [showRiskWarning, setShowRiskWarning] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'crypto' | 'fiat'>('crypto'); // Force crypto for now
   const [email, setEmail] = useState('');
   const [processingPayment, setProcessingPayment] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   useEffect(() => {
     if (eventId && !isNaN(eventId)) loadEvent();
@@ -93,6 +110,13 @@ export default function PurchaseTicketPage() {
     }
   }, [isConnected, mounted, eventId, router]);
 
+  // Show success modal when purchase is confirmed
+  useEffect(() => {
+    if (isConfirmed && !showSuccessModal) {
+      setShowSuccessModal(true);
+    }
+  }, [isConfirmed, showSuccessModal]);
+
   const loadEvent = async () => {
     try {
       setLoading(true);
@@ -105,16 +129,9 @@ export default function PurchaseTicketPage() {
       
       try {
         if (metadataURI.startsWith('ipfs://Qm')) {
-          // Extract base64 part after 'ipfs://Qm'
           const base64Part = metadataURI.replace('ipfs://Qm', '');
-          
-          // Decode base64 to binary string
           const decoded = atob(base64Part);
-          
-          // Decode URI component
           const jsonStr = decodeURIComponent(escape(decoded));
-          
-          // Parse JSON
           metadata = JSON.parse(jsonStr);
           console.log('[PurchasePage] Decoded metadata:', metadata);
         } else {
@@ -122,21 +139,62 @@ export default function PurchaseTicketPage() {
         }
       } catch (err) {
         console.error('[PurchasePage] Metadata decode error:', err);
-        // Fallback metadata
         metadata = {
           title: `Event #${eventId}`,
           description: 'Event description not available',
           venue: 'Venue TBD',
           startDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
           endDate: new Date(Date.now() + 31 * 24 * 60 * 60 * 1000).toISOString(),
+          ticketTypes: [],
         };
       }
 
-      setEvent({
+      // Read ticket types from contract
+      const ticketTypesData = await readEventTicketTypes(eventId);
+      console.log('[PurchasePage] Ticket types from contract:', ticketTypesData);
+      
+      // Use the same rate as create event form
+      const POL_TO_IDR = polRate || 5000;
+      
+      const ticketTypes: TicketTypeInfo[] = ticketTypesData.map((typeData: any, index: number) => {
+        console.log(`[PurchasePage] Processing ticket type ${index}:`, {
+          typeData,
+          typeId: typeData.typeId,
+          name: typeData.name,
+          price: typeData.price,
+        });
+        
+        // Find corresponding metadata
+        const metaType = metadata.ticketTypes?.find((t: any) => t.typeId === index) || {};
+        
+        // Get priceIDR from metadata, or convert from contract
+        let priceIDR = metaType.priceIDR;
+        if (!priceIDR || priceIDR === 0) {
+          const priceInWei = typeData.price;
+          const priceInPOL = Number(priceInWei) / 1e18;
+          priceIDR = Math.round(priceInPOL * POL_TO_IDR);
+        }
+        
+        return {
+          typeId: Number(typeData.typeId),
+          name: typeData.name as string,
+          description: metaType.description || '',
+          priceIDR,
+          pricePOL: formatEther(typeData.price as bigint),
+          maxSupply: Number(typeData.maxSupply),
+          sold: Number(typeData.sold),
+          available: Number(typeData.maxSupply) - Number(typeData.sold),
+          active: typeData.active as boolean,
+        };
+      });
+      
+      console.log('[PurchasePage] ✅ Processed ticket types:', ticketTypes);
+
+      const newEvent = {
         eventId,
         organizer: eventData[1] as string,
         metadataURI: eventData[2] as string,
-        ticketPrice: eventData[3] as bigint,
+        ticketTypesCount: Number(eventData[3]),
         maxTickets: Number(eventData[4]),
         ticketsSold: Number(eventData[5]),
         maxTicketsPerWallet: Number(eventData[6]),
@@ -146,7 +204,16 @@ export default function PurchaseTicketPage() {
         isResaleActive: eventData[10] as boolean,
         isCancelled: eventData[11] as boolean,
         metadata,
-      });
+        ticketTypes,
+      };
+
+      setEvent(newEvent);
+
+      // Auto-select first available ticket type
+      const firstAvailable = ticketTypes.find(t => t.active && t.available > 0);
+      if (firstAvailable) {
+        setSelectedType(firstAvailable);
+      }
     } catch (error) {
       console.error('[PurchasePage] Load event error:', error);
       setEvent(null);
@@ -156,8 +223,8 @@ export default function PurchaseTicketPage() {
   };
 
   const handleQuantityChange = (newQuantity: number) => {
-    if (!event) return;
-    const ticketsRemaining = event.maxTickets - event.ticketsSold;
+    if (!event || !selectedType) return;
+    const ticketsRemaining = selectedType.available;
     const maxAllowed = Math.min(event.maxTicketsPerWallet, ticketsRemaining);
     if (newQuantity >= 1 && newQuantity <= maxAllowed) {
       setQuantity(newQuantity);
@@ -167,18 +234,19 @@ export default function PurchaseTicketPage() {
 
   const handlePurchase = async () => {
     if (!event) { setPurchaseError('Event not found'); return; }
+    if (!selectedType) { setPurchaseError('Please select a ticket type'); return; }
     if (paymentMethod === 'crypto' && (!isConnected || !address)) { setPurchaseError('Please connect your wallet'); return; }
     if (paymentMethod === 'fiat' && !email) { setPurchaseError('Please enter your email'); return; }
     if (!event.isPrimarySaleActive) { setPurchaseError('Tickets are not available for sale'); return; }
     if (event.isCancelled) { setPurchaseError('This event has been cancelled'); return; }
 
-    const ticketsRemaining = event.maxTickets - event.ticketsSold;
+    const ticketsRemaining = selectedType.available;
     if (quantity > ticketsRemaining) { setPurchaseError('Not enough tickets available'); return; }
 
     try {
       setPurchaseError('');
       if (paymentMethod === 'crypto' && address) {
-        const fraudAnalysis: any = await analyzeBeforeTransaction(address, 'ticket_purchase', { eventId, quantity, price: event.ticketPrice });
+        const fraudAnalysis: any = await analyzeBeforeTransaction(address, 'ticket_purchase', { eventId, quantity, price: parseEther(selectedType.pricePOL) });
         if (fraudAnalysis.riskScore && fraudAnalysis.riskScore.level === 'critical') {
           setPurchaseError('Transaction blocked: Critical fraud risk detected');
           setShowRiskWarning(true);
@@ -195,11 +263,11 @@ export default function PurchaseTicketPage() {
   };
 
   const handleFiatPayment = async () => {
-    if (!event || !polRate) return;
+    if (!event || !polRate || !selectedType) return;
     try {
       setProcessingPayment(true);
-      const pricePOL = parseFloat(formatEther(event.ticketPrice));
-      const priceIDR = Math.round(pricePOL * polRate);
+      const pricePOL = parseFloat(selectedType.pricePOL);
+      const priceIDR = selectedType.priceIDR > 0 ? selectedType.priceIDR : Math.round(pricePOL * polRate);
       const totalIDR = priceIDR * quantity;
 
       const response = await fetch('/api/xendit/create-invoice', {
@@ -218,10 +286,10 @@ export default function PurchaseTicketPage() {
   };
 
   const handleCryptoPayment = async () => {
-    if (!event) return;
+    if (!event || !selectedType) return;
     for (let i = 0; i < quantity; i++) {
       const ticketMetadataURI = `ipfs://ticket-${eventId}-${Date.now()}-${i}`;
-      await buyTicket(eventId, 0, ticketMetadataURI, formatEther(event.ticketPrice));
+      await buyTicket(eventId, selectedType.typeId, ticketMetadataURI, selectedType.pricePOL);
     }
   };
 
@@ -254,56 +322,13 @@ export default function PurchaseTicketPage() {
     );
   }
 
-  const ticketsRemaining = event.maxTickets - event.ticketsSold;
-  const maxAllowed = Math.min(event.maxTicketsPerWallet, ticketsRemaining);
-  const totalPrice = formatEther(event.ticketPrice * BigInt(quantity));
-  const canPurchase = event.isPrimarySaleActive && !event.isCancelled && ticketsRemaining > 0;
+  const ticketsRemaining = selectedType?.available || 0;
+  const maxAllowed = selectedType ? Math.min(event.maxTicketsPerWallet, ticketsRemaining) : 0;
+  const totalPrice = selectedType ? (parseFloat(selectedType.pricePOL) * quantity).toFixed(6) : '0';
+  const canPurchase = event.isPrimarySaleActive && !event.isCancelled && selectedType && selectedType.active && selectedType.available > 0;
 
   // Success state
-  if (isConfirmed) {
-    return (
-      <div className="min-h-screen flex items-center justify-center px-4">
-        <div className="dp-surface p-10 max-w-md w-full text-center">
-          <div className="w-14 h-14 rounded-full mx-auto mb-5 flex items-center justify-center" style={{ backgroundColor: 'var(--success-muted)' }}>
-            <CheckCircle2 size={24} style={{ color: 'var(--success)' }} />
-          </div>
-          <h2 className="text-[22px] font-semibold mb-2">Your ticket is secured.</h2>
-          <p className="text-[14px] mb-2" style={{ color: 'var(--text-secondary)' }}>
-            {quantity} ticket{quantity > 1 ? 's' : ''} purchased successfully.
-          </p>
-
-          {/* Status indicators */}
-          <div className="space-y-2 my-6 text-left">
-            {[
-              { label: 'Payment confirmed', done: true },
-              { label: 'Ticket issued on-chain', done: true },
-              { label: 'Ownership recorded', done: true },
-            ].map((item, i) => (
-              <div key={i} className="flex items-center gap-2 text-[13px]">
-                <CheckCircle2 size={13} style={{ color: 'var(--success)' }} />
-                <span>{item.label}</span>
-              </div>
-            ))}
-          </div>
-
-          {hash && (
-            <p className="dp-mono text-[11px] mb-6 py-2 px-3 rounded-md" style={{ backgroundColor: 'var(--surface-elevated)', color: 'var(--text-muted)' }}>
-              Tx: {hash.slice(0, 12)}...{hash.slice(-8)}
-            </p>
-          )}
-
-          <div className="space-y-2">
-            <button onClick={() => router.push('/tickets')} className="dp-btn-primary w-full">
-              View My Ticket
-            </button>
-            <button onClick={() => router.push(`/events/${eventId}`)} className="dp-btn-secondary w-full">
-              Back to Event
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Success handled by TicketSuccessModal below, no need for early return
 
   return (
     <div className="min-h-screen pt-[72px] pb-16 px-4">
@@ -363,27 +388,87 @@ export default function PurchaseTicketPage() {
                     ? new Date(event.metadata.startDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
                     : 'TBD'}
                 </div>
-                <div className="flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
-                  <Tag size={13} style={{ color: 'var(--text-muted)' }} />
-                  {formatEther(event.ticketPrice)} POL per ticket
-                </div>
               </div>
+            </div>
+
+            {/* Ticket Type Selection */}
+            <div className="dp-surface p-5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.04em] mb-4" style={{ color: 'var(--text-muted)' }}>Select Ticket Type</p>
+              
+              {event.ticketTypes.length === 0 ? (
+                <div className="py-4 px-4 rounded-lg text-center" style={{ backgroundColor: 'var(--error-muted)' }}>
+                  <p className="text-[13px]" style={{ color: 'var(--error)' }}>No ticket types available</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {event.ticketTypes.map((type) => (
+                    <button
+                      key={type.typeId}
+                      onClick={() => {
+                        setSelectedType(type);
+                        setQuantity(1);
+                        setPurchaseError('');
+                      }}
+                      disabled={!type.active || type.available <= 0}
+                      className="w-full p-4 rounded-lg text-left transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                      style={{
+                        backgroundColor: selectedType?.typeId === type.typeId ? 'var(--accent-muted)' : 'var(--surface-elevated)',
+                        border: `1px solid ${selectedType?.typeId === type.typeId ? 'var(--accent)' : 'var(--border)'}`,
+                      }}
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex-1">
+                          <h3 className="text-[15px] font-semibold mb-1">{type.name}</h3>
+                          {type.description && (
+                            <p className="text-[12px] mb-2" style={{ color: 'var(--text-muted)' }}>
+                              {type.description}
+                            </p>
+                          )}
+                        </div>
+                        {!type.active || type.available <= 0 ? (
+                          <span className="text-[11px] px-2 py-1 rounded" style={{ backgroundColor: 'var(--error-muted)', color: 'var(--error)' }}>
+                            {!type.active ? 'Inactive' : 'Sold Out'}
+                          </span>
+                        ) : (
+                          <span className="text-[11px] px-2 py-1 rounded" style={{ backgroundColor: 'var(--success-muted)', color: 'var(--success)' }}>
+                            {type.available} left
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-[16px] font-semibold">{type.pricePOL} POL</span>
+                        {type.priceIDR > 0 && polRate && (
+                          <span className="text-[12px]" style={{ color: 'var(--text-muted)' }}>
+                            ≈ {formatIDR(type.priceIDR)}
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Quantity */}
             <div className="dp-surface p-5">
               <p className="text-[11px] font-semibold uppercase tracking-[0.04em] mb-4" style={{ color: 'var(--text-muted)' }}>Quantity</p>
 
-              {!canPurchase ? (
+              {!selectedType ? (
+                <div className="py-4 px-4 rounded-lg text-center" style={{ backgroundColor: 'var(--warning-muted)' }}>
+                  <p className="text-[13px]" style={{ color: 'var(--warning)' }}>
+                    Please select a ticket type first
+                  </p>
+                </div>
+              ) : !canPurchase ? (
                 <div className="py-4 px-4 rounded-lg text-center" style={{ backgroundColor: 'var(--error-muted)' }}>
                   <p className="text-[13px]" style={{ color: 'var(--error)' }}>
-                    {event.isCancelled ? 'Event cancelled' : ticketsRemaining === 0 ? 'Sold out' : 'Not available'}
+                    {event.isCancelled ? 'Event cancelled' : selectedType.available === 0 ? 'Sold out' : 'Not available'}
                   </p>
                 </div>
               ) : (
                 <>
                   <div className="flex items-center justify-between text-[13px] mb-4" style={{ color: 'var(--text-secondary)' }}>
-                    <span>Available: {ticketsRemaining}</span>
+                    <span>Available: {selectedType.available}</span>
                     <span>Max per wallet: {event.maxTicketsPerWallet}</span>
                   </div>
 
@@ -517,13 +602,23 @@ export default function PurchaseTicketPage() {
                 <p className="text-[11px] font-semibold uppercase tracking-[0.04em] mb-3" style={{ color: 'var(--text-muted)' }}>Summary</p>
                 <div className="space-y-2 mb-4">
                   <div className="flex justify-between text-[13px]">
+                    <span style={{ color: 'var(--text-secondary)' }}>Ticket type</span>
+                    <span className="font-medium">{selectedType?.name || '-'}</span>
+                  </div>
+                  <div className="flex justify-between text-[13px]">
                     <span style={{ color: 'var(--text-secondary)' }}>Price per ticket</span>
                     <div className="text-right">
-                      <p className="font-medium">{formatEther(event.ticketPrice)} POL</p>
-                      {paymentMethod === 'fiat' && polRate && (
-                        <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
-                          ≈ {formatIDR(Math.round(parseFloat(formatEther(event.ticketPrice)) * polRate))}
-                        </p>
+                      {selectedType ? (
+                        <>
+                          <p className="font-medium">{selectedType.pricePOL} POL</p>
+                          {paymentMethod === 'fiat' && selectedType.priceIDR > 0 && (
+                            <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
+                              ≈ {formatIDR(selectedType.priceIDR)}
+                            </p>
+                          )}
+                        </>
+                      ) : (
+                        <p className="font-medium" style={{ color: 'var(--text-muted)' }}>-</p>
                       )}
                     </div>
                   </div>
@@ -535,11 +630,17 @@ export default function PurchaseTicketPage() {
                   <div className="flex justify-between text-[15px]">
                     <span className="font-semibold">Total</span>
                     <div className="text-right">
-                      <p className="font-semibold">{totalPrice} POL</p>
-                      {paymentMethod === 'fiat' && polRate && (
-                        <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>
-                          ≈ {formatIDR(Math.round(parseFloat(totalPrice) * polRate))}
-                        </p>
+                      {selectedType ? (
+                        <>
+                          <p className="font-semibold">{totalPrice} POL</p>
+                          {paymentMethod === 'fiat' && selectedType.priceIDR > 0 && (
+                            <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>
+                              ≈ {formatIDR(selectedType.priceIDR * quantity)}
+                            </p>
+                          )}
+                        </>
+                      ) : (
+                        <p className="font-semibold" style={{ color: 'var(--text-muted)' }}>-</p>
                       )}
                     </div>
                   </div>
@@ -592,6 +693,24 @@ export default function PurchaseTicketPage() {
           </div>
         </div>
       </div>
+
+      {/* Success Modal */}
+      {event && selectedType && (
+        <TicketSuccessModal
+          isOpen={showSuccessModal}
+          onClose={() => setShowSuccessModal(false)}
+          event={{
+            eventId: event.eventId,
+            metadata: event.metadata,
+          }}
+          ticketType={{
+            name: selectedType.name,
+          }}
+          quantity={quantity}
+          transactionHash={hash}
+          walletAddress={address}
+        />
+      )}
     </div>
   );
 }

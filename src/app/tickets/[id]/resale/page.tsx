@@ -4,9 +4,27 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useWallet } from '@/hooks/useWallet';
 import { useEventTicketing } from '@/hooks/useEventTicketing';
+import { useTicketOwnershipHistory, useProvenanceVerification } from '@/hooks/useOwnershipHistory';
 import { readTicket, readEvent, readTicketOwner, readListing } from '@/lib/contractReads';
 import { formatEther, parseEther } from 'viem';
-import { MapPin, Clock, XCircle } from 'lucide-react';
+import { 
+  MapPin, 
+  Clock, 
+  XCircle, 
+  ChevronDown, 
+  ChevronUp, 
+  Tag, 
+  Ban,
+  CheckCircle2,
+  ShieldCheck,
+  TrendingUp,
+  Calendar,
+  Ticket,
+  AlertTriangle,
+  ArrowLeft,
+  Loader2
+} from 'lucide-react';
+import { OwnershipTimeline, OwnershipStatsCard, ProvenanceCard } from '@/components/OwnershipTimeline';
 
 interface TicketDetail {
   tokenId: number;
@@ -38,6 +56,8 @@ export default function ResaleManagementPage() {
   
   const { isConnected, address, mounted } = useWallet();
   const { listForResale, cancelResale, isPending, isConfirming, isConfirmed, hash, error } = useEventTicketing();
+  const { ownershipChain, loading: historyLoading } = useTicketOwnershipHistory(tokenId);
+  const { provenance } = useProvenanceVerification(tokenId);
   
   const [ticket, setTicket] = useState<TicketDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -45,6 +65,7 @@ export default function ResaleManagementPage() {
   const [resalePrice, setResalePrice] = useState('');
   const [priceError, setPriceError] = useState('');
   const [mode, setMode] = useState<'list' | 'cancel'>('list');
+  const [showHistory, setShowHistory] = useState(false);
 
   useEffect(() => {
     if (tokenId && !isNaN(tokenId)) {
@@ -209,10 +230,10 @@ export default function ResaleManagementPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center px-4">
         <div className="text-center">
-          <Clock size={64} className="mx-auto mb-4 animate-pulse text-primary" />
-          <p className="text-muted-foreground">Loading ticket details...</p>
+          <Loader2 className="w-16 h-16 mx-auto mb-4 animate-spin" style={{ color: 'var(--primary)' }} />
+          <p className="text-[14px]" style={{ color: 'var(--text-muted)' }}>Loading ticket details...</p>
         </div>
       </div>
     );
@@ -221,15 +242,15 @@ export default function ResaleManagementPage() {
   if (!ticket) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4">
-        <div className="glass rounded-xl p-12 max-w-md w-full text-center">
-          <XCircle size={64} className="mx-auto mb-4 text-destructive" />
-          <h2 className="text-2xl font-bold mb-2">Ticket Not Found</h2>
-          <p className="text-muted-foreground mb-6">
+        <div className="dp-card rounded-xl p-12 max-w-md w-full text-center">
+          <XCircle className="w-16 h-16 mx-auto mb-4 text-[#EF4444]" />
+          <h2 className="text-[24px] font-bold mb-2">Ticket Not Found</h2>
+          <p className="text-[14px] mb-6" style={{ color: 'var(--text-muted)' }}>
             This ticket doesn't exist or you don't own it.
           </p>
           <button
             onClick={() => router.push('/tickets')}
-            className="px-6 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-all"
+            className="dp-btn-primary"
           >
             Back to My Tickets
           </button>
@@ -242,17 +263,17 @@ export default function ResaleManagementPage() {
   if (isConfirmed) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4">
-        <div className="glass rounded-xl p-12 max-w-md w-full text-center">
-          <div className="text-6xl mb-4">✅</div>
-          <h2 className="text-2xl font-bold mb-2">
+        <div className="dp-card rounded-xl p-12 max-w-md w-full text-center">
+          <CheckCircle2 className="w-16 h-16 mx-auto mb-4 text-[#10B981]" />
+          <h2 className="text-[24px] font-bold mb-2">
             {mode === 'list' ? 'Listed Successfully!' : 'Listing Cancelled'}
           </h2>
-          <p className="text-muted-foreground mb-4">
+          <p className="text-[14px] mb-4" style={{ color: 'var(--text-muted)' }}>
             {mode === 'list'
               ? `Your ticket is now listed for ${resalePrice} POL`
               : 'Your ticket is no longer listed for sale'}
           </p>
-          <p className="text-sm text-muted-foreground mb-6 font-mono break-all">
+          <p className="text-[12px] mb-6 font-mono break-all" style={{ color: 'var(--text-muted)' }}>
             Tx: {hash?.slice(0, 10)}...{hash?.slice(-8)}
           </p>
           <div className="space-y-3">
@@ -264,7 +285,7 @@ export default function ResaleManagementPage() {
             </button>
             <button
               onClick={() => router.push('/tickets')}
-              className="w-full px-6 py-3 rounded-lg glass hover:glass-hover transition-all"
+              className="w-full px-6 py-3 rounded-lg dp-card hover:opacity-80 transition-all text-[14px]"
             >
               Back to My Tickets
             </button>
@@ -281,75 +302,130 @@ export default function ResaleManagementPage() {
   const resaleDeadlinePassed = Math.floor(Date.now() / 1000) > ticket.eventData!.resaleDeadline;
 
   return (
-    <div className="min-h-screen py-12 px-4">
-      <div className="container mx-auto max-w-4xl">
-        {/* Back Button */}
-        <button
-          onClick={() => router.push(`/tickets/${tokenId}`)}
-          className="dp-btn-ghost mb-6"
-          style={{ padding: '4px 0', color: 'var(--text-muted)' }}
-        >
-          ← Back to Ticket
-        </button>
-
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">
-            {ticket.listingData?.active ? 'Manage Resale Listing' : 'List Ticket for Resale'}
-          </h1>
-          <p className="text-muted-foreground">
-            Ticket #{ticket.tokenId} • {ticket.eventData?.title}
-          </p>
-          {ticket.eventData?.venue && (
-            <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1 justify-center">
-              <MapPin size={14} />
-              {ticket.eventData.venue}
-            </p>
-          )}
+    <div className="min-h-screen py-8 px-4 page-enter-active" style={{ backgroundColor: 'var(--bg)' }}>
+      <div className="dp-container max-w-5xl mx-auto">
+        {/* Compact Header */}
+        <div className="flex items-center justify-between mb-6">
+          <button
+            onClick={() => router.push(`/tickets/${tokenId}`)}
+            className="flex items-center gap-2 text-[13px] transition-opacity hover:opacity-80"
+            style={{ color: 'var(--text-secondary)' }}
+          >
+            <ArrowLeft size={14} />
+            Back
+          </button>
+          <div className="flex items-center gap-2">
+            {ticket.listingData?.active && (
+              <span className="px-2 py-1 rounded text-[11px] font-medium" style={{ backgroundColor: 'var(--primary-bg)', color: 'var(--primary)' }}>
+                Listed
+              </span>
+            )}
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Compact Grid Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6 items-start">
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Current Listing */}
+          <div className="space-y-4">
+            {/* Ticket Info Card - Compact */}
+            <div className="dp-surface p-5">
+              <h2 className="text-[16px] font-semibold mb-4">{ticket.eventData?.title}</h2>
+              
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="flex items-start gap-2">
+                  <MapPin size={16} style={{ color: 'var(--accent)', flexShrink: 0, marginTop: '2px' }} />
+                  <div>
+                    <p className="text-[11px] mb-0.5" style={{ color: 'var(--text-muted)' }}>Venue</p>
+                    <p className="text-[13px] font-medium" style={{ color: 'var(--text-primary)' }}>{ticket.eventData?.venue || 'TBD'}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <Calendar size={16} style={{ color: 'var(--accent)', flexShrink: 0, marginTop: '2px' }} />
+                  <div>
+                    <p className="text-[11px] mb-0.5" style={{ color: 'var(--text-muted)' }}>Date</p>
+                    <p className="text-[13px] font-medium" style={{ color: 'var(--text-primary)' }}>
+                      {ticket.eventData?.startDate
+                        ? new Date(ticket.eventData.startDate).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                          })
+                        : 'TBD'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t grid grid-cols-2 gap-3" style={{ borderColor: 'var(--border)' }}>
+                <div>
+                  <p className="text-[11px] mb-0.5" style={{ color: 'var(--text-muted)' }}>Token ID</p>
+                  <p className="text-[13px] font-semibold" style={{ color: 'var(--text-primary)' }}>#{ticket.tokenId}</p>
+                </div>
+                <div>
+                  <p className="text-[11px] mb-0.5" style={{ color: 'var(--text-muted)' }}>Resale Count</p>
+                  <p className="text-[13px] font-semibold" style={{ color: 'var(--text-primary)' }}>{ticket.resaleCount}/{ticket.maxResaleCount}</p>
+                </div>
+                <div>
+                  <p className="text-[11px] mb-0.5" style={{ color: 'var(--text-muted)' }}>Original Price</p>
+                  <p className="text-[13px] font-semibold" style={{ color: 'var(--text-primary)' }}>{formatEther(ticket.originalPrice)} POL</p>
+                </div>
+                <div>
+                  <p className="text-[11px] mb-0.5" style={{ color: 'var(--text-muted)' }}>Max Price Cap</p>
+                  <p className="text-[13px] font-semibold" style={{ color: 'var(--accent)' }}>{maxPrice} POL</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Current Listing - if active */}
             {ticket.listingData?.active && (
-              <div className="glass rounded-xl p-6 border-2 border-blue-500/30">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-semibold">Currently Listed</h2>
-                  <span className="px-3 py-1 rounded-lg text-sm bg-green-500/20 text-green-400">
-                    Active
-                  </span>
+              <div className="dp-surface p-5 border-2" style={{ borderColor: 'var(--primary)' }}>
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-[11px] uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+                    Currently Listed
+                  </p>
+                  <CheckCircle2 size={14} style={{ color: 'var(--primary)' }} />
                 </div>
-                <div className="mb-4">
-                  <p className="text-sm text-muted-foreground mb-1">Listed Price</p>
-                  <p className="text-3xl font-bold">{formatEther(ticket.listingData.price)} POL</p>
-                </div>
+                <p className="text-[28px] font-bold mb-1" style={{ color: 'var(--primary)' }}>
+                  {formatEther(ticket.listingData.price)} POL
+                </p>
+                <p className="text-[11px] mb-4" style={{ color: 'var(--text-secondary)' }}>
+                  Active on marketplace
+                </p>
                 <button
-                  onClick={() => setMode('cancel')}
-                  className="w-full px-6 py-3 rounded-lg bg-destructive text-white hover:bg-destructive/90 transition-all"
+                  onClick={handleCancelResale}
+                  className="w-full text-[13px] py-2.5 rounded-lg transition-all border flex items-center justify-center gap-2"
+                  style={{
+                    backgroundColor: 'var(--surface-hover)',
+                    borderColor: 'var(--border)',
+                    color: 'var(--text-secondary)',
+                  }}
                   disabled={isPending || isConfirming}
                 >
                   {isPending || isConfirming ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <Clock size={16} className="animate-spin" />
-                      {isPending ? 'Confirm in Wallet...' : 'Cancelling...'}
-                    </span>
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      {isPending ? 'Confirm...' : 'Cancelling...'}
+                    </>
                   ) : (
-                    'Cancel Listing'
+                    <>
+                      <Ban className="w-3.5 h-3.5" />
+                      Cancel Listing
+                    </>
                   )}
                 </button>
               </div>
             )}
 
-            {/* Listing Form */}
+            {/* Listing Form - compact */}
             {!ticket.listingData?.active && (
-              <div className="glass rounded-xl p-6">
-                <h2 className="text-xl font-semibold mb-6">Set Resale Price</h2>
+              <div className="dp-surface p-5">
+                <h3 className="text-[14px] font-semibold mb-4">Set Resale Price</h3>
 
                 {!canList ? (
-                  <div className="p-4 bg-destructive/20 rounded-lg text-center">
-                    <p className="text-destructive mb-2">Cannot list this ticket</p>
-                    <p className="text-sm text-muted-foreground">
+                  <div className="p-4 rounded-lg text-center border" style={{ backgroundColor: 'var(--surface-hover)', borderColor: 'var(--border)' }}>
+                    <AlertTriangle className="w-10 h-10 mx-auto mb-2" style={{ color: 'var(--text-muted)' }} />
+                    <p className="text-[12px] font-medium mb-1">Cannot list this ticket</p>
+                    <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
                       {ticket.redeemed
                         ? 'Ticket has been used'
                         : !ticket.active
@@ -363,9 +439,9 @@ export default function ResaleManagementPage() {
                   </div>
                 ) : (
                   <>
-                    <div className="mb-6">
-                      <label className="block text-sm font-medium mb-2">
-                        Price (POL) *
+                    <div className="mb-4">
+                      <label className="block text-[11px] font-medium mb-2 uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+                        Price (POL) <span style={{ color: 'var(--primary)' }}>*</span>
                       </label>
                       <input
                         type="number"
@@ -376,50 +452,72 @@ export default function ResaleManagementPage() {
                           setPriceError('');
                         }}
                         onBlur={() => validatePrice(resalePrice)}
-                        className="w-full px-4 py-3 rounded-lg bg-muted border border-border focus:border-primary focus:outline-none text-lg"
-                        placeholder="0.1"
+                        className="w-full px-4 py-2.5 rounded-lg border text-[15px] focus:outline-none transition-colors"
+                        style={{ 
+                          backgroundColor: 'var(--input-bg)', 
+                          borderColor: priceError ? 'var(--primary)' : 'var(--border)',
+                          color: 'var(--text-primary)'
+                        }}
+                        placeholder="0.100"
                       />
                       {priceError && (
-                        <p className="text-destructive text-sm mt-2">{priceError}</p>
+                        <p className="text-[11px] mt-1.5 flex items-center gap-1" style={{ color: 'var(--primary)' }}>
+                          <AlertTriangle className="w-3 h-3" />
+                          {priceError}
+                        </p>
                       )}
-                      <p className="text-xs text-muted-foreground mt-2">
-                        Maximum allowed: {maxPrice} POL ({ticket.eventData!.resalePriceCapBps / 100}% of original)
+                      <p className="text-[10px] mt-1.5" style={{ color: 'var(--text-muted)' }}>
+                        Max: {maxPrice} POL ({ticket.eventData!.resalePriceCapBps / 100}% cap)
                       </p>
                     </div>
 
-                    <div className="flex gap-2 mb-6">
+                    <div className="grid grid-cols-2 gap-2 mb-4">
                       <button
                         onClick={() => setResalePrice(formatEther(ticket.originalPrice))}
-                        className="flex-1 px-4 py-2 rounded-lg glass hover:glass-hover transition-all text-sm"
+                        className="px-3 py-2 rounded-lg text-[11px] font-medium transition-all border hover:opacity-70"
+                        style={{ 
+                          backgroundColor: 'var(--surface-hover)', 
+                          borderColor: 'var(--border)',
+                          color: 'var(--text-secondary)'
+                        }}
                       >
-                        Same as Paid
+                        Same Price
                       </button>
                       <button
                         onClick={() => setResalePrice(maxPrice)}
-                        className="flex-1 px-4 py-2 rounded-lg glass hover:glass-hover transition-all text-sm"
+                        className="px-3 py-2 rounded-lg text-[11px] font-medium transition-all border hover:opacity-70"
+                        style={{ 
+                          backgroundColor: 'var(--surface-hover)', 
+                          borderColor: 'var(--border)',
+                          color: 'var(--text-secondary)'
+                        }}
                       >
-                        Maximum Price
+                        Max Price
                       </button>
                     </div>
 
                     {error && (
-                      <div className="mb-4 p-3 bg-destructive/20 rounded-lg text-sm text-destructive">
-                        {error.message || 'Transaction failed'}
+                      <div className="mb-3 p-2.5 rounded-lg text-[11px] flex items-start gap-1.5 border" style={{ backgroundColor: 'var(--surface-hover)', borderColor: 'var(--primary)', color: 'var(--primary)' }}>
+                        <AlertTriangle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+                        <span>{error.message || 'Transaction failed'}</span>
                       </div>
                     )}
 
                     <button
                       onClick={handleListForResale}
                       disabled={isPending || isConfirming || !resalePrice || !!priceError}
-                      className="dp-btn-primary w-full"
+                      className="dp-btn-primary w-full flex items-center justify-center gap-2 text-[13px] py-2.5"
                     >
                       {isPending || isConfirming ? (
-                        <span className="flex items-center justify-center gap-2">
-                          <Clock size={16} className="animate-spin" />
-                          {isPending ? 'Confirm in Wallet...' : 'Listing...'}
-                        </span>
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          {isPending ? 'Confirm...' : 'Listing...'}
+                        </>
                       ) : (
-                        'List for Resale'
+                        <>
+                          <Tag className="w-3.5 h-3.5" />
+                          List for Resale
+                        </>
                       )}
                     </button>
                   </>
@@ -427,88 +525,127 @@ export default function ResaleManagementPage() {
               </div>
             )}
 
-            {/* Resale Rules */}
-            <div className="glass rounded-xl p-6">
-              <h2 className="text-xl font-semibold mb-4">Resale Rules</h2>
-              <ul className="space-y-3 text-sm">
+            {/* Ownership History - compact collapsible */}
+            <div className="dp-surface p-4">
+              <button
+                onClick={() => setShowHistory(!showHistory)}
+                className="w-full flex items-center justify-between text-left"
+              >
+                <h3 className="text-[13px] font-semibold">Ownership History</h3>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
+                    {showHistory ? 'Hide' : 'Show'}
+                  </span>
+                  {showHistory ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                </div>
+              </button>
+
+              {showHistory && (
+                <div className="mt-4 pt-4" style={{ borderTop: '1px solid var(--border)' }}>
+                  {historyLoading ? (
+                    <div className="space-y-2">
+                      {[1, 2].map((i) => <div key={i} className="h-10 rounded animate-pulse" style={{ backgroundColor: 'var(--surface-hover)' }} />)}
+                    </div>
+                  ) : ownershipChain ? (
+                    <div className="space-y-4">
+                      {ownershipChain.priceHistory && (
+                        <OwnershipStatsCard stats={{
+                          totalTransfers: ownershipChain.totalTransfers,
+                          totalResales: ownershipChain.totalResales,
+                          originalPrice: ownershipChain.priceHistory.originalPrice,
+                          currentPrice: ownershipChain.priceHistory.currentPrice,
+                          highestPrice: ownershipChain.priceHistory.highestPrice,
+                          totalVolume: ownershipChain.priceHistory.totalVolume,
+                        }} />
+                      )}
+                      <OwnershipTimeline history={ownershipChain.history} />
+                      {provenance && <ProvenanceCard provenance={provenance} />}
+                    </div>
+                  ) : (
+                    <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
+                      No history available
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Resale Rules - compact */}
+            <div className="dp-surface p-5">
+              <h3 className="text-[14px] font-semibold mb-3">Resale Rules</h3>
+              <ul className="space-y-2.5 text-[11px]">
                 <li className="flex items-start gap-2">
-                  <span className="text-blue-400">•</span>
-                  <span>
-                    Price cap: Maximum {ticket.eventData!.resalePriceCapBps / 100}% of original price
-                    ({maxPrice} POL)
+                  <TrendingUp className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" style={{ color: 'var(--accent)' }} />
+                  <span style={{ color: 'var(--text-secondary)' }}>
+                    Max {ticket.eventData!.resalePriceCapBps / 100}% of original ({maxPrice} POL)
                   </span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-blue-400">•</span>
-                  <span>
-                    Resale deadline: {ticket.eventData?.startDate 
-                      ? new Date(ticket.eventData.startDate).toLocaleDateString()
-                      : 'TBD'}
+                  <Calendar className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" style={{ color: 'var(--accent)' }} />
+                  <span style={{ color: 'var(--text-secondary)' }}>
+                    Until {ticket.eventData?.startDate 
+                      ? new Date(ticket.eventData.startDate).toLocaleDateString('en-US', { 
+                          month: 'short', 
+                          day: 'numeric' 
+                        })
+                      : 'event date'}
                   </span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-blue-400">•</span>
-                  <span>
-                    Resale count: {ticket.resaleCount} of {ticket.maxResaleCount} allowed
-                  </span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-blue-400">•</span>
-                  <span>
-                    Atomic escrow ensures safe transfer and instant payment
+                  <CheckCircle2 className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" style={{ color: 'var(--accent)' }} />
+                  <span style={{ color: 'var(--text-secondary)' }}>
+                    Atomic escrow protection
                   </span>
                 </li>
               </ul>
             </div>
           </div>
 
-          {/* Sidebar */}
-          <div className="lg:col-span-1">
-            <div className="glass rounded-xl p-6 sticky top-24">
-              <h3 className="text-lg font-semibold mb-4">Ticket Summary</h3>
-              
-              <div className="space-y-3 mb-6 pb-6 border-b border-border">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Token ID</span>
-                  <span className="font-semibold">#{ticket.tokenId}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Original Price</span>
-                  <span className="font-semibold">{formatEther(ticket.originalPrice)} POL</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Resale Count</span>
-                  <span className="font-semibold">{ticket.resaleCount}/{ticket.maxResaleCount}</span>
-                </div>
-              </div>
+          {/* Sidebar - Compact Sticky */}
+          <div className="lg:w-[340px]">
+            <div className="dp-surface p-5 space-y-4 sticky top-20">
+              {resalePrice && !priceError ? (
+                <>
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: 'var(--text-muted)' }}>
+                      You'll Receive
+                    </p>
+                    <p className="text-[28px] font-bold tracking-[-0.02em] break-words" style={{ color: 'var(--text-primary)', wordBreak: 'break-word' }}>
+                      {parseFloat(resalePrice).toFixed(4)} POL
+                    </p>
+                    <p className="text-[10px] mt-1" style={{ color: 'var(--text-muted)' }}>
+                      After successful sale
+                    </p>
+                  </div>
 
-              {resalePrice && !priceError && (
-                <div className="mb-6">
-                  <p className="text-sm text-muted-foreground mb-2">You'll receive</p>
-                  <p className="text-2xl font-bold">{resalePrice} POL</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    After successful sale
+                  <div className="pt-3" style={{ borderTop: '1px solid var(--border)' }}>
+                    <p className="text-[10px] uppercase tracking-wider mb-2" style={{ color: 'var(--text-muted)' }}>
+                      Protection
+                    </p>
+                    <ul className="space-y-1.5 text-[11px]">
+                      <li className="flex items-center gap-1.5">
+                        <CheckCircle2 size={12} style={{ color: 'var(--success)' }} />
+                        <span style={{ color: 'var(--text-secondary)' }}>Atomic escrow</span>
+                      </li>
+                      <li className="flex items-center gap-1.5">
+                        <CheckCircle2 size={12} style={{ color: 'var(--success)' }} />
+                        <span style={{ color: 'var(--text-secondary)' }}>Instant payment</span>
+                      </li>
+                      <li className="flex items-center gap-1.5">
+                        <CheckCircle2 size={12} style={{ color: 'var(--success)' }} />
+                        <span style={{ color: 'var(--text-secondary)' }}>No chargebacks</span>
+                      </li>
+                    </ul>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-6">
+                  <Tag size={32} className="mx-auto mb-3" style={{ color: 'var(--text-muted)', opacity: 0.3 }} />
+                  <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
+                    Enter a price to see details
                   </p>
                 </div>
               )}
-
-              <div className="pt-4 border-t border-border">
-                <p className="text-xs text-muted-foreground mb-2">Protection</p>
-                <ul className="space-y-1 text-xs">
-                  <li className="flex items-center gap-1">
-                    <span className="text-green-400">✓</span>
-                    <span>Atomic escrow</span>
-                  </li>
-                  <li className="flex items-center gap-1">
-                    <span className="text-green-400">✓</span>
-                    <span>Instant payment</span>
-                  </li>
-                  <li className="flex items-center gap-1">
-                    <span className="text-green-400">✓</span>
-                    <span>No chargebacks</span>
-                  </li>
-                </ul>
-              </div>
             </div>
           </div>
         </div>

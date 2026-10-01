@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { formatEther } from 'viem';
-import { readEventCount, readEvent } from '@/lib/contractReads';
+import { readEventCount, readEvent, readEventTicketTypes } from '@/lib/contractReads';
 import { formatIDR } from '@/lib/currency';
 import { useLivePrice } from '@/hooks/useLivePrice';
 import {
@@ -21,8 +21,8 @@ interface EventDisplay {
   eventId: number;
   organizer: string;
   metadataURI: string;
-  ticketPrice: string;
-  ticketPriceBigInt: bigint;
+  lowestPrice: number; // In IDR
+  highestPrice: number; // In IDR
   maxTickets: number;
   ticketsSold: number;
   isPrimarySaleActive: boolean;
@@ -35,7 +35,6 @@ interface EventDisplay {
     startDate: string;
     endDate: string;
     imageUrl?: string;
-    ticketPriceIDR?: number | null;
   };
 }
 
@@ -47,23 +46,6 @@ export default function EventsPage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'available' | 'soldout'>('available');
 
-  // Get ticket price in IDR (from metadata or convert from POL using live rate)
-  const getTicketPriceIDR = (event: EventDisplay) => {
-    // If organizer set IDR price in metadata, use that
-    if (event.metadata?.ticketPriceIDR && event.metadata.ticketPriceIDR > 0) {
-      return event.metadata.ticketPriceIDR;
-    }
-    
-    // Otherwise, convert POL price to IDR using live rate
-    if (polRate) {
-      const polPrice = parseFloat(formatEther(event.ticketPriceBigInt));
-      return Math.round(polPrice * polRate);
-    }
-    
-    // Fallback while loading
-    return 0;
-  };
-
   useEffect(() => {
     loadEvents();
   }, []);
@@ -72,69 +54,65 @@ export default function EventsPage() {
     try {
       setLoading(true);
       const count = await readEventCount();
+      console.log('[Events] Event count from contract:', count);
 
       if (!count || count === 0n) {
+        console.log('[Events] No events found, count is 0');
         setEvents([]);
         setLoading(false);
         return;
       }
 
+      console.log(`[Events] Loading ${Number(count)} events...`);
       const eventPromises: Promise<EventDisplay | null>[] = [];
 
       for (let i = 1; i <= Number(count); i++) {
         eventPromises.push(
-          readEvent(i).then((eventData: any) => {
-            if (!eventData) return null;
-
-            let metadata;
+          (async () => {
             try {
-              // Try to decode metadata from metadataURI
-              const metadataURI = eventData[2] as string;
-              
-              console.log(`[Event ${i}] MetadataURI:`, metadataURI);
-              
-              if (metadataURI.startsWith('ipfs://Qm')) {
-                // Extract base64 part from mock IPFS URI
-                // The format is: ipfs://Qm{base64_encoded_json_with_special_chars_replaced_with_x}
-                const base64Part = metadataURI.replace('ipfs://Qm', '');
+              const eventData = await readEvent(i);
+              if (!eventData) return null;
+
+              let metadata;
+              try {
+                const metadataURI = eventData[2] as string;
                 
-                try {
-                  // Try direct decode without replacing 'x'
-                  // Because the original encoding might not have padding issues
-                  let decoded: string;
+                if (metadataURI.startsWith('ipfs://Qm')) {
+                  const base64Part = metadataURI.replace('ipfs://Qm', '');
                   
                   try {
-                    // First attempt: direct decode
-                    decoded = atob(base64Part);
-                  } catch (e) {
-                    // Second attempt: add padding if needed
-                    const padded = base64Part + '='.repeat((4 - (base64Part.length % 4)) % 4);
-                    decoded = atob(padded);
+                    let decoded: string;
+                    try {
+                      decoded = atob(base64Part);
+                    } catch (e) {
+                      const padded = base64Part + '='.repeat((4 - (base64Part.length % 4)) % 4);
+                      decoded = atob(padded);
+                    }
+                    
+                    const jsonStr = decodeURIComponent(escape(decoded));
+                    const parsedMetadata = JSON.parse(jsonStr);
+                    
+                    metadata = {
+                      title: parsedMetadata.title || `Event #${i}`,
+                      description: parsedMetadata.description || '',
+                      venue: parsedMetadata.venue || 'Venue TBD',
+                      startDate: parsedMetadata.startDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+                      endDate: parsedMetadata.endDate || new Date(Date.now() + 31 * 24 * 60 * 60 * 1000).toISOString(),
+                      imageUrl: parsedMetadata.imageUrl || '',
+                      ticketTypes: parsedMetadata.ticketTypes || [], // ✅ ADD THIS!
+                    };
+                  } catch (decodeError) {
+                    console.error(`[Event ${i}] Decode error:`, decodeError);
+                    metadata = {
+                      title: `Event #${i}`,
+                      description: '',
+                      venue: 'Venue TBD',
+                      startDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+                      endDate: new Date(Date.now() + 31 * 24 * 60 * 60 * 1000).toISOString(),
+                      imageUrl: '',
+                    };
                   }
-                  
-                  // Decode URI component
-                  const jsonStr = decodeURIComponent(escape(decoded));
-                  const parsedMetadata = JSON.parse(jsonStr);
-                  
-                  console.log(`[Event ${i}] Decoded metadata:`, parsedMetadata);
-                  
-                  // Ensure metadata has all required fields
-                  metadata = {
-                    title: parsedMetadata.title || `Event #${i}`,
-                    description: parsedMetadata.description || '',
-                    venue: parsedMetadata.venue || 'Venue TBD',
-                    startDate: parsedMetadata.startDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-                    endDate: parsedMetadata.endDate || new Date(Date.now() + 31 * 24 * 60 * 60 * 1000).toISOString(),
-                    imageUrl: parsedMetadata.imageUrl || '',
-                    ticketPriceIDR: parsedMetadata.ticketPriceIDR || null,
-                  };
-                  
-                  console.log(`[Event ${i}] Final metadata:`, metadata);
-                } catch (decodeError) {
-                  console.error(`[Event ${i}] Decode error:`, decodeError);
-                  console.log(`[Event ${i}] Base64 part:`, base64Part);
-                  
-                  // Fallback metadata
+                } else {
                   metadata = {
                     title: `Event #${i}`,
                     description: '',
@@ -142,12 +120,10 @@ export default function EventsPage() {
                     startDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
                     endDate: new Date(Date.now() + 31 * 24 * 60 * 60 * 1000).toISOString(),
                     imageUrl: '',
-                    ticketPriceIDR: null,
                   };
                 }
-              } else {
-                console.log(`[Event ${i}] Not IPFS format, using fallback`);
-                // Fallback for other URI formats
+              } catch (error) {
+                console.error('Error parsing metadata for event', i, error);
                 metadata = {
                   title: `Event #${i}`,
                   description: '',
@@ -155,61 +131,97 @@ export default function EventsPage() {
                   startDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
                   endDate: new Date(Date.now() + 31 * 24 * 60 * 60 * 1000).toISOString(),
                   imageUrl: '',
-                  ticketPriceIDR: null,
                 };
               }
-            } catch (error) {
-              console.error('Error parsing metadata for event', i, error);
-              metadata = {
-                title: `Event #${i}`,
-                description: '',
-                venue: 'Venue TBD',
-                startDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-                endDate: new Date(Date.now() + 31 * 24 * 60 * 60 * 1000).toISOString(),
-                imageUrl: '',
-                ticketPriceIDR: null,
+
+              // Read ticket types to get prices
+              const ticketTypesData = await readEventTicketTypes(i);
+              console.log(`[Event ${i}] Ticket types from contract (length: ${ticketTypesData.length}):`, ticketTypesData);
+              console.log(`[Event ${i}] Metadata:`, metadata);
+              console.log(`[Event ${i}] Metadata ticket types:`, (metadata as any).ticketTypes);
+              
+              // Use the same rate as create event form (from useLivePrice hook with fallback)
+              const POL_TO_IDR = polRate || 5000;
+              
+              const ticketTypesPrices = ticketTypesData
+                .map((typeData: any, index: number) => {
+                  // First try to get from metadata (PRIORITY - this is the exact price)
+                  const metaTicketTypes = (metadata as any).ticketTypes || [];
+                  const metaType = metaTicketTypes[index]; // Match by array index, not typeId
+                  
+                  console.log(`[Event ${i}] Processing index ${index}:`, {
+                    contractType: typeData.name,
+                    contractPrice: typeData.price?.toString(),
+                    metaType: metaType,
+                    metaPriceIDR: metaType?.priceIDR,
+                  });
+                  
+                  if (metaType?.priceIDR) {
+                    console.log(`[Event ${i}] ✅ Using metadata price for index ${index}: ${metaType.priceIDR} IDR`);
+                    return metaType.priceIDR;
+                  }
+                  
+                  // Fallback: Convert from contract price (POL wei to IDR)
+                  const priceInWei = typeData.price;
+                  const priceInPOL = Number(priceInWei) / 1e18;
+                  const priceInIDR = Math.round(priceInPOL * POL_TO_IDR);
+                  console.log(`[Event ${i}] ⚠️ Fallback conversion for index ${index}: ${priceInWei} wei = ${priceInPOL} POL = ${priceInIDR} IDR (rate: ${POL_TO_IDR})`);
+                  return priceInIDR;
+                })
+                .filter((price: number) => price > 0);
+
+              console.log(`[Event ${i}] Final extracted prices:`, ticketTypesPrices);
+              const lowestPrice = ticketTypesPrices.length > 0 ? Math.min(...ticketTypesPrices) : 0;
+              const highestPrice = ticketTypesPrices.length > 0 ? Math.max(...ticketTypesPrices) : 0;
+              console.log(`[Event ${i}] Price range - Lowest: ${lowestPrice}, Highest: ${highestPrice}`);
+
+              return {
+                eventId: i,
+                organizer: eventData[1] as string,
+                metadataURI: eventData[2] as string,
+                lowestPrice,
+                highestPrice,
+                maxTickets: Number(eventData[4]),
+                ticketsSold: Number(eventData[5]),
+                isPrimarySaleActive: eventData[9] as boolean,
+                isResaleActive: eventData[10] as boolean,
+                isCancelled: eventData[11] as boolean,
+                metadata,
               };
+            } catch (error) {
+              console.error(`[Event ${i}] Failed to load:`, error);
+              return null;
             }
-
-            const ticketPriceBigInt = eventData[3] as bigint;
-
-            return {
-              eventId: i,
-              organizer: eventData[1] as string,
-              metadataURI: eventData[2] as string,
-              ticketPrice: formatEther(ticketPriceBigInt),
-              ticketPriceBigInt: ticketPriceBigInt,
-              maxTickets: Number(eventData[4]),
-              ticketsSold: Number(eventData[5]),
-              isPrimarySaleActive: eventData[9] as boolean,
-              isResaleActive: eventData[10] as boolean,
-              isCancelled: eventData[11] as boolean,
-              metadata,
-            };
-          }).catch((error) => {
-            console.error(`[Event ${i}] Failed to load:`, error);
-            return null;
-          })
+          })()
         );
       }
 
       const loadedEvents = (await Promise.all(eventPromises)).filter(
         (e): e is EventDisplay => {
           // Filter out null events
-          if (!e) return false;
-          
-          // Filter out events with fallback metadata (corrupt/invalid)
-          // If title is still "Event #X" after decoding, it means metadata failed
-          if (e.metadata?.title === `Event #${e.eventId}` && e.metadata?.venue === 'Venue TBD') {
-            console.log(`[Event ${e.eventId}] Skipping event with invalid metadata`);
+          if (!e) {
+            console.log('[Events] Filtered out null event');
             return false;
           }
+          
+          // Don't filter out events even if metadata is fallback
+          // We can still show them with data from contract
+          console.log(`[Event ${e.eventId}] Including event: ${e.metadata?.title}, cancelled: ${e.isCancelled}, sold: ${e.ticketsSold}/${e.maxTickets}`);
           
           return true;
         }
       );
 
       setEvents(loadedEvents);
+      console.log('[Events] All loaded events:', loadedEvents.map(e => ({
+        id: e.eventId,
+        title: e.metadata?.title,
+        sold: e.ticketsSold,
+        max: e.maxTickets,
+        isSoldOut: e.ticketsSold >= e.maxTickets,
+        lowestPrice: e.lowestPrice,
+        highestPrice: e.highestPrice,
+      })));
     } catch (error) {
       console.error('Error loading events:', error);
     } finally {
@@ -361,8 +373,17 @@ export default function EventsPage() {
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-[11px] mb-0.5" style={{ color: 'var(--text-muted)' }}>From</p>
-                      <p className="text-[15px] font-semibold">{formatIDR(getTicketPriceIDR(event))}</p>
+                      <p className="text-[11px] mb-0.5" style={{ color: 'var(--text-muted)' }}>
+                        {event.lowestPrice === 0 ? 'Price' : event.lowestPrice === event.highestPrice ? 'Price' : 'From'}
+                      </p>
+                      <p className="text-[15px] font-semibold">
+                        {event.lowestPrice === 0 
+                          ? 'Contact Organizer'
+                          : event.lowestPrice === event.highestPrice 
+                            ? formatIDR(event.lowestPrice)
+                            : `${formatIDR(event.lowestPrice)} - ${formatIDR(event.highestPrice)}`
+                        }
+                      </p>
                     </div>
                     <div className="text-right">
                       <p className="text-[11px] mb-0.5" style={{ color: 'var(--text-muted)' }}>Available</p>

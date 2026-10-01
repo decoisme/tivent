@@ -90,7 +90,12 @@ export async function getPOLRate(): Promise<number> {
 /**
  * Format currency IDR
  */
-export function formatIDR(amount: number): string {
+export function formatIDR(amount: number | undefined | null): string {
+  // Safety check for undefined, null, or NaN
+  if (amount === undefined || amount === null || isNaN(amount)) {
+    return 'Rp 0';
+  }
+  
   return new Intl.NumberFormat('id-ID', {
     style: 'currency',
     currency: 'IDR',

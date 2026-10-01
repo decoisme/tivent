@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useWallet } from '@/hooks/useWallet';
 import { formatEther } from 'viem';
-import { readEvent } from '@/lib/contractReads';
+import { readEvent, readEventTicketTypes } from '@/lib/contractReads';
 import { formatIDR } from '@/lib/currency';
 import { useLivePrice } from '@/hooks/useLivePrice';
 import {
@@ -21,11 +21,23 @@ import {
   Lock,
 } from 'lucide-react';
 
+interface TicketTypeInfo {
+  typeId: number;
+  name: string;
+  description: string;
+  priceIDR: number;
+  pricePOL: string;
+  maxSupply: number;
+  sold: number;
+  available: number;
+  active: boolean;
+}
+
 interface EventDetail {
   eventId: number;
   organizer: string;
   metadataURI: string;
-  ticketPrice: bigint;
+  ticketTypesCount: number;
   maxTickets: number;
   ticketsSold: number;
   maxTicketsPerWallet: number;
@@ -41,8 +53,9 @@ interface EventDetail {
     startDate: string;
     endDate: string;
     imageUrl?: string;
-    ticketPriceIDR?: number | null;
+    ticketTypes?: TicketTypeInfo[];
   };
+  ticketTypes: TicketTypeInfo[];
 }
 
 export default function EventDetailPage() {
@@ -56,23 +69,24 @@ export default function EventDetailPage() {
   const [event, setEvent] = useState<EventDetail | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Get ticket price in IDR (from metadata or convert from POL using live rate)
-  const getTicketPriceIDR = () => {
-    if (!event) return 0;
+  // Get price range for display
+  const getPriceRange = () => {
+    if (!event || event.ticketTypes.length === 0) return { min: 0, max: 0, single: 0 };
     
-    // If organizer set IDR price in metadata, use that
-    if (event.metadata?.ticketPriceIDR && event.metadata.ticketPriceIDR > 0) {
-      return event.metadata.ticketPriceIDR;
+    const activeTypes = event.ticketTypes.filter(t => t.active && t.available > 0);
+    if (activeTypes.length === 0) {
+      // If no active types, use all types for display
+      const prices = event.ticketTypes.map(t => t.priceIDR || 0);
+      const min = Math.min(...prices);
+      const max = Math.max(...prices);
+      return { min, max, single: min === max ? min : 0 };
     }
     
-    // Otherwise, convert POL price to IDR using live rate
-    if (polRate) {
-      const polPrice = parseFloat(formatEther(event.ticketPrice));
-      return Math.round(polPrice * polRate);
-    }
+    const prices = activeTypes.map(t => t.priceIDR || 0);
+    const min = Math.min(...prices);
+    const max = Math.max(...prices);
     
-    // Fallback while loading
-    return 0;
+    return { min, max, single: min === max ? min : 0 };
   };
 
   useEffect(() => {
@@ -126,10 +140,10 @@ export default function EventDetailPage() {
               startDate: parsedMetadata.startDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
               endDate: parsedMetadata.endDate || new Date(Date.now() + 31 * 24 * 60 * 60 * 1000).toISOString(),
               imageUrl: parsedMetadata.imageUrl || '',
-              ticketPriceIDR: parsedMetadata.ticketPriceIDR || null, // IDR price from organizer
+              ticketTypes: parsedMetadata.ticketTypes || [],
             };
           } catch (decodeError) {
-            console.error('Error decoding metadata:', decodeError);
+            console.error('[EventDetail] Error decoding metadata:', decodeError);
             // Fallback metadata
             metadata = {
               title: `Event #${eventId}`,
@@ -138,7 +152,7 @@ export default function EventDetailPage() {
               startDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
               endDate: new Date(Date.now() + 31 * 24 * 60 * 60 * 1000).toISOString(),
               imageUrl: '',
-              ticketPriceIDR: null,
+              ticketTypes: [],
             };
           }
         } else {
@@ -150,11 +164,11 @@ export default function EventDetailPage() {
             startDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
             endDate: new Date(Date.now() + 31 * 24 * 60 * 60 * 1000).toISOString(),
             imageUrl: '',
-            ticketPriceIDR: null,
+            ticketTypes: [],
           };
         }
       } catch (error) {
-        console.error('Error parsing metadata:', error);
+        console.error('[EventDetail] Error parsing metadata:', error);
         metadata = {
           title: `Event #${eventId}`,
           description: 'Event details will be available soon.',
@@ -162,15 +176,46 @@ export default function EventDetailPage() {
           startDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
           endDate: new Date(Date.now() + 31 * 24 * 60 * 60 * 1000).toISOString(),
           imageUrl: '',
-          ticketPriceIDR: null,
+          ticketTypes: [],
         };
       }
+
+      // Read ticket types from contract
+      const ticketTypesData = await readEventTicketTypes(eventId);
+      
+      // Use the same rate as create event form (from useLivePrice hook with fallback)
+      const POL_TO_IDR = polRate || 5000;
+      
+      const ticketTypes: TicketTypeInfo[] = ticketTypesData.map((typeData: any, index: number) => {
+        // Find corresponding metadata
+        const metaType = metadata.ticketTypes?.find((t: any) => t.typeId === index) || {};
+        
+        // Get price from metadata, or convert from contract
+        let priceIDR = metaType.priceIDR;
+        if (!priceIDR || priceIDR === 0) {
+          const priceInWei = typeData.price; // Use property name, not index
+          const priceInPOL = Number(priceInWei) / 1e18;
+          priceIDR = Math.round(priceInPOL * POL_TO_IDR);
+        }
+        
+        return {
+          typeId: Number(typeData.typeId),
+          name: typeData.name as string,
+          description: metaType.description || '',
+          priceIDR,
+          pricePOL: formatEther(typeData.price as bigint),
+          maxSupply: Number(typeData.maxSupply),
+          sold: Number(typeData.sold),
+          available: Number(typeData.maxSupply) - Number(typeData.sold),
+          active: typeData.active as boolean,
+        };
+      });
 
       setEvent({
         eventId,
         organizer: eventData[1] as string,
         metadataURI: eventData[2] as string,
-        ticketPrice: eventData[3] as bigint,
+        ticketTypesCount: Number(eventData[3]),
         maxTickets: Number(eventData[4]),
         ticketsSold: Number(eventData[5]),
         maxTicketsPerWallet: Number(eventData[6]),
@@ -180,9 +225,10 @@ export default function EventDetailPage() {
         isResaleActive: eventData[10] as boolean,
         isCancelled: eventData[11] as boolean,
         metadata,
+        ticketTypes,
       });
     } catch (error) {
-      console.error('Error loading event:', error);
+      console.error('[EventDetail] Error loading event:', error);
       setEvent(null);
     } finally {
       setLoading(false);
@@ -354,6 +400,57 @@ export default function EventDetailPage() {
                   {event.metadata?.description || 'No description available.'}
                 </p>
               </div>
+
+              {/* Ticket Types */}
+              {event.ticketTypes.length > 0 && (
+                <div className="mb-8">
+                  <h2 className="text-[16px] font-semibold mb-4">Available Ticket Types</h2>
+                  <div className="space-y-3">
+                    {event.ticketTypes.map((type) => (
+                      <div
+                        key={type.typeId}
+                        className="p-4 rounded-lg transition-all"
+                        style={{
+                          backgroundColor: 'var(--surface)',
+                          border: '1px solid var(--border)',
+                          opacity: !type.active || type.available <= 0 ? 0.6 : 1,
+                        }}
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex-1">
+                            <h3 className="text-[15px] font-semibold mb-1">{type.name}</h3>
+                            {type.description && (
+                              <p className="text-[12px] mb-2" style={{ color: 'var(--text-muted)' }}>
+                                {type.description}
+                              </p>
+                            )}
+                          </div>
+                          {!type.active || type.available <= 0 ? (
+                            <span className="text-[11px] px-2 py-1 rounded ml-3" style={{ backgroundColor: 'var(--error-muted)', color: 'var(--error)' }}>
+                              {!type.active ? 'Inactive' : 'Sold Out'}
+                            </span>
+                          ) : (
+                            <span className="text-[11px] px-2 py-1 rounded ml-3" style={{ backgroundColor: 'var(--success-muted)', color: 'var(--success)' }}>
+                              {type.available} left
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-[16px] font-semibold">{formatIDR(type.priceIDR)}</p>
+                            <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
+                              ≈ {type.pricePOL} POL
+                            </p>
+                          </div>
+                          <div className="text-right text-[12px]" style={{ color: 'var(--text-secondary)' }}>
+                            <p>{type.sold} / {type.maxSupply} sold</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Smart Contract Rules */}
@@ -398,13 +495,30 @@ export default function EventDetailPage() {
           <div className="lg:col-span-1">
             <div className="dp-surface p-6 lg:sticky lg:top-[88px] lg:self-start">
               <div className="mb-5">
-                <p className="text-[11px] mb-1" style={{ color: 'var(--text-muted)' }}>Price per ticket</p>
-                <p className="text-[28px] font-semibold tracking-[-0.02em]">
-                  {formatIDR(getTicketPriceIDR())}
+                <p className="text-[11px] mb-1" style={{ color: 'var(--text-muted)' }}>
+                  {getPriceRange().single > 0 ? 'Price per ticket' : 'Price range'}
                 </p>
-                <p className="text-[11px] mt-1" style={{ color: 'var(--text-muted)' }}>
-                  ≈ {formatEther(event.ticketPrice)} POL
-                </p>
+                {getPriceRange().single > 0 ? (
+                  <>
+                    <p className="text-[28px] font-semibold tracking-[-0.02em]">
+                      {formatIDR(getPriceRange().single)}
+                    </p>
+                    {event.ticketTypes.length > 0 && event.ticketTypes[0].pricePOL && (
+                      <p className="text-[11px] mt-1" style={{ color: 'var(--text-muted)' }}>
+                        ≈ {event.ticketTypes[0].pricePOL} POL
+                      </p>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <p className="text-[28px] font-semibold tracking-[-0.02em]">
+                      {formatIDR(getPriceRange().min)} - {formatIDR(getPriceRange().max)}
+                    </p>
+                    <p className="text-[11px] mt-1" style={{ color: 'var(--text-muted)' }}>
+                      Multiple ticket types available
+                    </p>
+                  </>
+                )}
               </div>
 
               <hr className="dp-divider mb-5" />

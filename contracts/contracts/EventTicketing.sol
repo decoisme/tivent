@@ -26,13 +26,34 @@ contract EventTicketing is ERC721, ERC721URIStorage, Ownable, ReentrancyGuard, P
     mapping(uint256 => mapping(address => uint256)) public ticketsPurchasedByWallet;
     mapping(address => bool) public gateOfficers;
     
+    // Ticket types: eventId => typeId => TicketType
+    mapping(uint256 => mapping(uint256 => TicketType)) public ticketTypes;
+    
+    // Per-type purchase tracking: eventId => typeId => buyer => quantity
+    mapping(uint256 => mapping(uint256 => mapping(address => uint256))) public ticketsPurchasedByType;
+    
     // ==================== Structs ====================
+    
+    struct TicketType {
+        uint256 typeId;
+        string name;
+        uint256 price;
+        uint256 maxSupply;
+        uint256 sold;
+        bool active;
+    }
+    
+    struct TicketTypeInput {
+        string name;
+        uint256 price;
+        uint256 maxSupply;
+    }
     
     struct EventData {
         uint256 eventId;
         address organizer;
         string metadataURI;
-        uint256 ticketPrice;
+        uint256 ticketTypesCount;
         uint256 maxTickets;
         uint256 ticketsSold;
         uint256 maxTicketsPerWallet;
@@ -66,8 +87,15 @@ contract EventTicketing is ERC721, ERC721URIStorage, Ownable, ReentrancyGuard, P
         uint256 indexed eventId,
         address indexed organizer,
         string metadataURI,
-        uint256 ticketPrice,
-        uint256 maxTickets
+        uint256 ticketTypesCount
+    );
+    
+    event TicketTypeAdded(
+        uint256 indexed eventId,
+        uint256 indexed typeId,
+        string name,
+        uint256 price,
+        uint256 maxSupply
     );
     
     event EventUpdated(
@@ -152,7 +180,88 @@ contract EventTicketing is ERC721, ERC721URIStorage, Ownable, ReentrancyGuard, P
     // ==================== Core Functions ====================
     
     /**
-     * @dev Create a new event
+     * @dev Internal function to create event with ticket types
+     */
+    function _createEventWithTypes(
+        string memory metadataURI,
+        TicketTypeInput[] memory ticketTypeInputs,
+        uint256 maxTicketsPerWallet,
+        uint256 resalePriceCap,
+        uint256 resaleDeadline
+    ) internal returns (uint256) {
+        require(bytes(metadataURI).length > 0, "Metadata URI required");
+        require(ticketTypeInputs.length > 0, "At least one ticket type required");
+        require(ticketTypeInputs.length <= 10, "Max 10 ticket types per event");
+        require(maxTicketsPerWallet > 0, "Max per wallet must be greater than 0");
+        require(resalePriceCap >= 10000, "Resale cap must be >= 100%");
+        require(resaleDeadline > block.timestamp, "Deadline must be in future");
+        
+        uint256 eventId = _nextEventId++;
+        uint256 totalMaxTickets = 0;
+        
+        // Validate and create ticket types
+        for (uint256 i = 0; i < ticketTypeInputs.length; i++) {
+            require(bytes(ticketTypeInputs[i].name).length > 0, "Type name required");
+            require(ticketTypeInputs[i].price > 0, "Price must be greater than 0");
+            require(ticketTypeInputs[i].maxSupply > 0, "Max supply must be greater than 0");
+            require(ticketTypeInputs[i].maxSupply <= 1000000, "Max supply too large");
+            
+            totalMaxTickets += ticketTypeInputs[i].maxSupply;
+            
+            ticketTypes[eventId][i] = TicketType({
+                typeId: i,
+                name: ticketTypeInputs[i].name,
+                price: ticketTypeInputs[i].price,
+                maxSupply: ticketTypeInputs[i].maxSupply,
+                sold: 0,
+                active: true
+            });
+            
+            emit TicketTypeAdded(eventId, i, ticketTypeInputs[i].name, ticketTypeInputs[i].price, ticketTypeInputs[i].maxSupply);
+        }
+        
+        require(totalMaxTickets <= 1000000, "Total max tickets too large");
+        
+        events[eventId] = EventData({
+            eventId: eventId,
+            organizer: msg.sender,
+            metadataURI: metadataURI,
+            ticketTypesCount: ticketTypeInputs.length,
+            maxTickets: totalMaxTickets,
+            ticketsSold: 0,
+            maxTicketsPerWallet: maxTicketsPerWallet,
+            resalePriceCap: resalePriceCap,
+            resaleDeadline: resaleDeadline,
+            primarySaleActive: true,
+            resaleActive: true,
+            cancelled: false
+        });
+        
+        emit EventCreated(eventId, msg.sender, metadataURI, ticketTypeInputs.length);
+        
+        return eventId;
+    }
+    
+    /**
+     * @dev Create a new event with multiple ticket types
+     * @param metadataURI IPFS URI containing event metadata
+     * @param ticketTypeInputs Array of ticket types with name, price, and supply
+     * @param maxTicketsPerWallet Purchase limit per wallet (across all types)
+     * @param resalePriceCap Maximum resale price in basis points (11000 = 110%)
+     * @param resaleDeadline Unix timestamp after which resale is disabled
+     */
+    function createEventWithTypes(
+        string memory metadataURI,
+        TicketTypeInput[] memory ticketTypeInputs,
+        uint256 maxTicketsPerWallet,
+        uint256 resalePriceCap,
+        uint256 resaleDeadline
+    ) external whenNotPaused returns (uint256) {
+        return _createEventWithTypes(metadataURI, ticketTypeInputs, maxTicketsPerWallet, resalePriceCap, resaleDeadline);
+    }
+    
+    /**
+     * @dev Create a new event (backward compatible - single ticket type)
      * @param metadataURI IPFS URI containing event metadata
      * @param ticketPrice Price per ticket in wei
      * @param maxTickets Maximum number of tickets
@@ -168,39 +277,21 @@ contract EventTicketing is ERC721, ERC721URIStorage, Ownable, ReentrancyGuard, P
         uint256 resalePriceCap,
         uint256 resaleDeadline
     ) external whenNotPaused returns (uint256) {
-        require(bytes(metadataURI).length > 0, "Metadata URI required");
-        require(ticketPrice > 0, "Price must be greater than 0");
-        require(maxTickets > 0, "Max tickets must be greater than 0");
-        require(maxTicketsPerWallet > 0, "Max per wallet must be greater than 0");
-        require(resalePriceCap >= 10000, "Resale cap must be >= 100%");
-        require(resaleDeadline > block.timestamp, "Deadline must be in future");
-        
-        uint256 eventId = _nextEventId++;
-        
-        events[eventId] = EventData({
-            eventId: eventId,
-            organizer: msg.sender,
-            metadataURI: metadataURI,
-            ticketPrice: ticketPrice,
-            maxTickets: maxTickets,
-            ticketsSold: 0,
-            maxTicketsPerWallet: maxTicketsPerWallet,
-            resalePriceCap: resalePriceCap,
-            resaleDeadline: resaleDeadline,
-            primarySaleActive: true,
-            resaleActive: true,
-            cancelled: false
+        // Convert to single ticket type
+        TicketTypeInput[] memory types = new TicketTypeInput[](1);
+        types[0] = TicketTypeInput({
+            name: "General Admission",
+            price: ticketPrice,
+            maxSupply: maxTickets
         });
         
-        emit EventCreated(eventId, msg.sender, metadataURI, ticketPrice, maxTickets);
-        
-        return eventId;
+        return _createEventWithTypes(metadataURI, types, maxTicketsPerWallet, resalePriceCap, resaleDeadline);
     }
     
     /**
-     * @dev Purchase a ticket for an event
+     * @dev Purchase a ticket for an event by ticket type
      * @param eventId ID of the event
-     * @param ticketTypeId Type of ticket (VIP, Regular, etc.)
+     * @param ticketTypeId Type of ticket to purchase
      * @param ticketMetadataURI IPFS URI for ticket-specific metadata
      */
     function buyTicket(
@@ -209,11 +300,14 @@ contract EventTicketing is ERC721, ERC721URIStorage, Ownable, ReentrancyGuard, P
         string memory ticketMetadataURI
     ) external payable whenNotPaused eventExists(eventId) nonReentrant returns (uint256) {
         EventData storage eventData = events[eventId];
+        TicketType storage ticketType = ticketTypes[eventId][ticketTypeId];
         
         require(eventData.primarySaleActive, "Primary sale not active");
         require(!eventData.cancelled, "Event cancelled");
-        require(eventData.ticketsSold < eventData.maxTickets, "Sold out");
-        require(msg.value == eventData.ticketPrice, "Incorrect payment amount");
+        require(ticketTypeId < eventData.ticketTypesCount, "Invalid ticket type");
+        require(ticketType.active, "Ticket type not active");
+        require(ticketType.sold < ticketType.maxSupply, "Ticket type sold out");
+        require(msg.value == ticketType.price, "Incorrect payment amount");
         require(
             ticketsPurchasedByWallet[eventId][msg.sender] < eventData.maxTicketsPerWallet,
             "Purchase limit exceeded"
@@ -229,22 +323,24 @@ contract EventTicketing is ERC721, ERC721URIStorage, Ownable, ReentrancyGuard, P
         tickets[tokenId] = TicketData({
             eventId: eventId,
             ticketTypeId: ticketTypeId,
-            originalPrice: eventData.ticketPrice,
+            originalPrice: ticketType.price,
             resaleCount: 0,
-            maxResaleCount: 3, // Default max resale count
+            maxResaleCount: 3,
             redeemed: false,
             active: true
         });
         
         // Update counters
+        ticketType.sold++;
         eventData.ticketsSold++;
         ticketsPurchasedByWallet[eventId][msg.sender]++;
+        ticketsPurchasedByType[eventId][ticketTypeId][msg.sender]++;
         
         // Transfer payment to organizer
         (bool success, ) = payable(eventData.organizer).call{value: msg.value}("");
         require(success, "Payment transfer failed");
         
-        emit TicketMinted(tokenId, eventId, msg.sender, eventData.ticketPrice);
+        emit TicketMinted(tokenId, eventId, msg.sender, ticketType.price);
         
         return tokenId;
     }
@@ -256,6 +352,28 @@ contract EventTicketing is ERC721, ERC721URIStorage, Ownable, ReentrancyGuard, P
      */
     function getEvent(uint256 eventId) external view eventExists(eventId) returns (EventData memory) {
         return events[eventId];
+    }
+    
+    /**
+     * @dev Get ticket type details
+     */
+    function getTicketType(uint256 eventId, uint256 typeId) external view eventExists(eventId) returns (TicketType memory) {
+        require(typeId < events[eventId].ticketTypesCount, "Invalid ticket type");
+        return ticketTypes[eventId][typeId];
+    }
+    
+    /**
+     * @dev Get all ticket types for an event
+     */
+    function getEventTicketTypes(uint256 eventId) external view eventExists(eventId) returns (TicketType[] memory) {
+        uint256 count = events[eventId].ticketTypesCount;
+        TicketType[] memory types = new TicketType[](count);
+        
+        for (uint256 i = 0; i < count; i++) {
+            types[i] = ticketTypes[eventId][i];
+        }
+        
+        return types;
     }
     
     /**
@@ -301,7 +419,94 @@ contract EventTicketing is ERC721, ERC721URIStorage, Ownable, ReentrancyGuard, P
         );
     }
     
+    /**
+     * @dev Get how many tickets a wallet has purchased for an event
+     */
+    function getWalletPurchaseCount(uint256 eventId, address wallet) external view eventExists(eventId) returns (uint256) {
+        return ticketsPurchasedByWallet[eventId][wallet];
+    }
+    
+    /**
+     * @dev Get how many tickets of a specific type a wallet has purchased
+     */
+    function getWalletPurchaseCountByType(uint256 eventId, uint256 typeId, address wallet) 
+        external view eventExists(eventId) returns (uint256) 
+    {
+        require(typeId < events[eventId].ticketTypesCount, "Invalid ticket type");
+        return ticketsPurchasedByType[eventId][typeId][wallet];
+    }
+    
     // ==================== Organizer Functions ====================
+    
+    /**
+     * @dev Add a new ticket type to an existing event
+     */
+    function addTicketType(
+        uint256 eventId,
+        string memory name,
+        uint256 price,
+        uint256 maxSupply
+    ) external onlyEventOrganizer(eventId) eventExists(eventId) {
+        EventData storage eventData = events[eventId];
+        require(bytes(name).length > 0, "Type name required");
+        require(price > 0, "Price must be greater than 0");
+        require(maxSupply > 0, "Max supply must be greater than 0");
+        require(eventData.ticketTypesCount < 10, "Max 10 ticket types per event");
+        
+        uint256 newTypeId = eventData.ticketTypesCount;
+        
+        ticketTypes[eventId][newTypeId] = TicketType({
+            typeId: newTypeId,
+            name: name,
+            price: price,
+            maxSupply: maxSupply,
+            sold: 0,
+            active: true
+        });
+        
+        eventData.ticketTypesCount++;
+        eventData.maxTickets += maxSupply;
+        
+        emit TicketTypeAdded(eventId, newTypeId, name, price, maxSupply);
+    }
+    
+    /**
+     * @dev Update ticket type (only if no tickets sold yet)
+     */
+    function updateTicketType(
+        uint256 eventId,
+        uint256 typeId,
+        uint256 price,
+        uint256 maxSupply,
+        bool active
+    ) external onlyEventOrganizer(eventId) eventExists(eventId) {
+        EventData storage eventData = events[eventId];
+        require(typeId < eventData.ticketTypesCount, "Invalid ticket type");
+        
+        TicketType storage ticketType = ticketTypes[eventId][typeId];
+        require(ticketType.sold == 0, "Cannot update type with sales");
+        require(price > 0, "Price must be greater than 0");
+        require(maxSupply > 0, "Max supply must be greater than 0");
+        
+        // Update total max tickets
+        eventData.maxTickets = eventData.maxTickets - ticketType.maxSupply + maxSupply;
+        
+        ticketType.price = price;
+        ticketType.maxSupply = maxSupply;
+        ticketType.active = active;
+    }
+    
+    /**
+     * @dev Toggle ticket type active status
+     */
+    function setTicketTypeActive(uint256 eventId, uint256 typeId, bool active) 
+        external 
+        onlyEventOrganizer(eventId) 
+        eventExists(eventId) 
+    {
+        require(typeId < events[eventId].ticketTypesCount, "Invalid ticket type");
+        ticketTypes[eventId][typeId].active = active;
+    }
     
     /**
      * @dev Toggle primary sale status

@@ -2,7 +2,7 @@ import { createPublicClient, http, type Address } from 'viem';
 import { polygonAmoy } from 'viem/chains';
 
 // Contract ABI for read operations
-const EVENT_TICKETING_ABI = [
+export const EVENT_TICKETING_ABI = [
   {
     name: 'eventCount',
     type: 'function',
@@ -19,7 +19,7 @@ const EVENT_TICKETING_ABI = [
       { name: 'eventId', type: 'uint256' },
       { name: 'organizer', type: 'address' },
       { name: 'metadataURI', type: 'string' },
-      { name: 'ticketPrice', type: 'uint256' },
+      { name: 'ticketTypesCount', type: 'uint256' },
       { name: 'maxTickets', type: 'uint256' },
       { name: 'ticketsSold', type: 'uint256' },
       { name: 'maxTicketsPerWallet', type: 'uint256' },
@@ -29,6 +29,40 @@ const EVENT_TICKETING_ABI = [
       { name: 'resaleActive', type: 'bool' },
       { name: 'cancelled', type: 'bool' },
     ],
+  },
+  {
+    name: 'ticketTypes',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [
+      { name: 'eventId', type: 'uint256' },
+      { name: 'typeId', type: 'uint256' }
+    ],
+    outputs: [
+      { name: 'typeId', type: 'uint256' },
+      { name: 'name', type: 'string' },
+      { name: 'price', type: 'uint256' },
+      { name: 'maxSupply', type: 'uint256' },
+      { name: 'sold', type: 'uint256' },
+      { name: 'active', type: 'bool' },
+    ],
+  },
+  {
+    name: 'getEventTicketTypes',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [{ name: 'eventId', type: 'uint256' }],
+    outputs: [{
+      type: 'tuple[]',
+      components: [
+        { name: 'typeId', type: 'uint256' },
+        { name: 'name', type: 'string' },
+        { name: 'price', type: 'uint256' },
+        { name: 'maxSupply', type: 'uint256' },
+        { name: 'sold', type: 'uint256' },
+        { name: 'active', type: 'bool' },
+      ]
+    }],
   },
   {
     name: 'tickets',
@@ -71,9 +105,37 @@ const EVENT_TICKETING_ABI = [
     inputs: [{ name: 'tokenId', type: 'uint256' }],
     outputs: [{ type: 'bool' }],
   },
+  {
+    name: 'Transfer',
+    type: 'event',
+    inputs: [
+      { name: 'from', type: 'address', indexed: true },
+      { name: 'to', type: 'address', indexed: true },
+      { name: 'tokenId', type: 'uint256', indexed: true },
+    ],
+  },
+  {
+    name: 'TicketListed',
+    type: 'event',
+    inputs: [
+      { name: 'tokenId', type: 'uint256', indexed: true },
+      { name: 'seller', type: 'address', indexed: true },
+      { name: 'price', type: 'uint256' },
+    ],
+  },
+  {
+    name: 'TicketResold',
+    type: 'event',
+    inputs: [
+      { name: 'tokenId', type: 'uint256', indexed: true },
+      { name: 'from', type: 'address', indexed: true },
+      { name: 'to', type: 'address', indexed: true },
+      { name: 'price', type: 'uint256' },
+    ],
+  },
 ] as const;
 
-const CONTRACT_ADDRESS = (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || '0x0000000000000000000000000000000000000000') as Address;
+export const CONTRACT_ADDRESS = (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || '0x0000000000000000000000000000000000000000') as Address;
 
 // Use Polygon Amoy testnet (Mumbai is deprecated)
 const chain = polygonAmoy;
@@ -149,9 +211,49 @@ export async function readTicketOwner(tokenId: number): Promise<Address | null> 
       args: [BigInt(tokenId)],
     });
     return result;
-  } catch (error) {
-    console.error(`Error reading ticket owner ${tokenId}:`, error);
+  } catch (error: any) {
+    // Suppress ERC721NonexistentToken errors (normal for scanning)
+    const isNonexistentToken = error.message?.includes('0x7e273289');
+    if (!isNonexistentToken) {
+      console.error(`Error reading ticket owner ${tokenId}:`, error);
+    }
     return null;
+  }
+}
+
+/**
+ * Read ticket type data
+ */
+export async function readTicketType(eventId: number, typeId: number) {
+  try {
+    const result = await publicClient.readContract({
+      address: CONTRACT_ADDRESS,
+      abi: EVENT_TICKETING_ABI,
+      functionName: 'ticketTypes',
+      args: [BigInt(eventId), BigInt(typeId)],
+    });
+    return result;
+  } catch (error) {
+    console.error(`Error reading ticket type ${eventId}-${typeId}:`, error);
+    return null;
+  }
+}
+
+/**
+ * Read all ticket types for an event
+ */
+export async function readEventTicketTypes(eventId: number) {
+  try {
+    const result = await publicClient.readContract({
+      address: CONTRACT_ADDRESS,
+      abi: EVENT_TICKETING_ABI,
+      functionName: 'getEventTicketTypes',
+      args: [BigInt(eventId)],
+    });
+    return result;
+  } catch (error) {
+    console.error(`Error reading event ticket types ${eventId}:`, error);
+    return [];
   }
 }
 

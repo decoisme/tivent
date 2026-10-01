@@ -55,7 +55,7 @@ export default function DemoComponentsPage() {
             Custom Form Components
           </h1>
           <p className="text-[15px]" style={{ color: 'var(--text-secondary)' }}>
-            Professional custom dropdown, date picker, and time picker matching DecentraPass design system.
+            Professional custom dropdown, date picker, and time picker matching Tivent design system.
           </p>
         </div>
 
@@ -256,7 +256,7 @@ export default function DemoComponentsPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {[
-                { title: 'Custom Styled', desc: 'Matches DecentraPass design system' },
+                { title: 'Custom Styled', desc: 'Matches Tivent design system' },
                 { title: 'Keyboard Support', desc: 'Arrow keys, Enter, Escape' },
                 { title: 'Smooth Animations', desc: '200ms ease transitions' },
                 { title: 'Click Outside Close', desc: 'Automatic dropdown close' },

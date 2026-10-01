@@ -4,9 +4,10 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useWallet } from '@/hooks/useWallet';
 import { useTicketOwnershipHistory, useProvenanceVerification } from '@/hooks/useOwnershipHistory';
-import { readTicket, readEvent, readTicketOwner, readListing } from '@/lib/contractReads';
+import { readTicket, readEvent, readTicketOwner, readListing, readTicketType } from '@/lib/contractReads';
 import { formatEther } from 'viem';
 import { OwnershipTimeline, OwnershipStatsCard, ProvenanceCard } from '@/components/OwnershipTimeline';
+import AdmitOneTicket from '@/components/ui/admit-one-3-d-holographic-ticket';
 import {
   ArrowLeft,
   QrCode,
@@ -27,12 +28,14 @@ interface TicketDetail {
   tokenId: number;
   eventId: number;
   ticketTypeId: number;
+  ticketTypeName?: string;
   originalPrice: bigint;
   resaleCount: number;
   maxResaleCount: number;
   redeemed: boolean;
   active: boolean;
   owner: string;
+  eventImageUrl?: string;
   eventData?: {
     title: string;
     venue: string;
@@ -97,6 +100,9 @@ export default function TicketDetailPage() {
         isCancelled: eventData ? (eventData[11] as boolean) : false,
       };
 
+      let ticketTypeName = 'General Admission';
+      let eventImageUrl: string | undefined = undefined;
+
       if (eventData) {
         const metadataURI = eventData[2] as string;
         
@@ -124,11 +130,24 @@ export default function TicketDetailPage() {
               isCancelled: eventData[11] as boolean,
             };
             
+            eventImageUrl = metadata.imageUrl;
+            
             console.log(`[Ticket Detail #${tokenId}] Decoded metadata:`, metadata);
           }
         } catch (err) {
           console.error(`[Ticket Detail #${tokenId}] Metadata decode error:`, err);
           // Use fallback values already set
+        }
+
+        // Read ticket type name from contract
+        try {
+          const ticketTypeId = Number(ticketData[1]);
+          const ticketTypeData = await readTicketType(eventId, ticketTypeId);
+          if (ticketTypeData) {
+            ticketTypeName = ticketTypeData[1] as string;
+          }
+        } catch (err) {
+          console.error(`[Ticket Detail #${tokenId}] Error reading ticket type:`, err);
         }
       }
 
@@ -136,12 +155,14 @@ export default function TicketDetailPage() {
         tokenId,
         eventId: Number(ticketData[0]),
         ticketTypeId: Number(ticketData[1]),
+        ticketTypeName,
         originalPrice: ticketData[2] as bigint,
         resaleCount: Number(ticketData[3]),
         maxResaleCount: Number(ticketData[4]),
         redeemed: ticketData[5] as boolean,
         active: ticketData[6] as boolean,
         owner,
+        eventImageUrl,
         eventData: eventMetadata,
         listingData: listingData ? {
           price: listingData[2] as bigint,
@@ -242,6 +263,37 @@ export default function TicketDetailPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-5">
+            {/* Holographic Ticket Display */}
+            <div className="dp-surface p-6">
+              <h2 className="text-[11px] font-semibold mb-4" style={{ color: 'var(--text-muted)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                Your Ticket
+              </h2>
+              <div className="flex justify-center">
+                <AdmitOneTicket
+                  name={ticket.ticketTypeName?.toUpperCase() || 'GENERAL ADMISSION'}
+                  presenter="TIVENT"
+                  event={ticket.eventData?.title?.toUpperCase() || `EVENT #${ticket.eventId}`}
+                  venue={ticket.eventData?.venue?.toUpperCase() || 'VENUE TBD'}
+                  dates={ticket.eventData?.startDate 
+                    ? new Date(ticket.eventData.startDate).toLocaleDateString('en-US', {
+                        month: 'short', day: 'numeric', year: 'numeric',
+                      }).toUpperCase()
+                    : 'DATE TBD'
+                  }
+                  stubText={ticket.ticketTypeName?.toUpperCase() || 'GENERAL'}
+                  watermark={new Date().getFullYear().toString()}
+                  width={560}
+                  imageUrl={ticket.eventImageUrl}
+                  walletAddress={ticket.owner ? `${ticket.owner.slice(0, 8)}...${ticket.owner.slice(-8)}` : undefined}
+                  texture={{
+                    colorFront: '#a78bfa',
+                    shape: 'warp',
+                    speed: 0.4,
+                  }}
+                />
+              </div>
+            </div>
+
             {/* Event Info */}
             <div className="dp-surface p-6">
               <h2 className="text-[14px] font-semibold mb-4" style={{ color: 'var(--text-muted)', letterSpacing: '0.04em', textTransform: 'uppercase', fontSize: '11px' }}>Event Information</h2>
@@ -278,6 +330,12 @@ export default function TicketDetailPage() {
                   <p className="text-[11px] mb-0.5" style={{ color: 'var(--text-muted)' }}>Token ID</p>
                   <p className="text-[14px] font-medium">#{ticket.tokenId}</p>
                 </div>
+                {ticket.ticketTypeName && (
+                  <div>
+                    <p className="text-[11px] mb-0.5" style={{ color: 'var(--text-muted)' }}>Ticket Type</p>
+                    <p className="text-[14px] font-medium">{ticket.ticketTypeName}</p>
+                  </div>
+                )}
                 <div>
                   <p className="text-[11px] mb-0.5" style={{ color: 'var(--text-muted)' }}>Original Price</p>
                   <p className="text-[14px] font-medium">{formatEther(ticket.originalPrice)} ETH</p>

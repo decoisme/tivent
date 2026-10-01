@@ -25,10 +25,9 @@ export function Navigation() {
           <div className="flex items-center gap-8">
             <button
               onClick={() => router.push('/')}
-              className="text-[15px] font-semibold tracking-[-0.02em] hover:opacity-80 transition-opacity"
-              style={{ color: 'var(--text-primary)' }}
+              className="flex items-center gap-2 hover:opacity-80 transition-opacity"
             >
-              DecentraPass
+              <img src="/tivent-logo.png" alt="Tivent" className="h-8 w-auto" />
             </button>
             {/* Desktop Nav */}
             <div className="hidden md:flex items-center gap-1">

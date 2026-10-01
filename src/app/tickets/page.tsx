@@ -24,6 +24,10 @@ export default function TicketsPage() {
 
   const [filter, setFilter] = useState<'all' | 'active' | 'redeemed'>('active');
 
+  // Debug logging
+  console.log('[TicketsPage] Render - tickets:', tickets.length, 'loading:', loading, 'error:', error);
+  console.log('[TicketsPage] Tickets data:', tickets.map(t => ({ id: t.tokenId, event: t.eventTitle, active: t.active })));
+
   if (!isConnected) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4">
@@ -198,6 +202,12 @@ export default function TicketsPage() {
                     </div>
 
                     <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 mb-4 text-[13px]" style={{ color: 'var(--text-secondary)' }}>
+                      {ticket.ticketTypeName && (
+                        <span className="flex items-center gap-1.5">
+                          <Ticket size={12} style={{ color: 'var(--text-muted)' }} />
+                          {ticket.ticketTypeName}
+                        </span>
+                      )}
                       <span className="flex items-center gap-1.5">
                         <MapPin size={12} style={{ color: 'var(--text-muted)' }} />
                         {ticket.eventVenue || 'Venue TBD'}

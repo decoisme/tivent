@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useWallet } from '@/hooks/useWallet';
-import { readTicket, readEvent, readTicketOwner } from '@/lib/contractReads';
+import { readTicket, readEvent, readTicketOwner, readTicketType } from '@/lib/contractReads';
 import { createQRPayload, generateQRCode } from '@/lib/qrcode';
 import {
   ArrowLeft,
@@ -20,6 +20,8 @@ import {
 interface TicketInfo {
   tokenId: number;
   eventId: number;
+  ticketTypeId: number;
+  ticketTypeName?: string;
   redeemed: boolean;
   active: boolean;
   owner: string;
@@ -28,6 +30,7 @@ interface TicketInfo {
     venue: string;
     startDate: string;
     isCancelled: boolean;
+    imageUrl?: string;
   };
 }
 
@@ -100,6 +103,7 @@ export default function TicketQRPage() {
       if (!userIsOwner) { router.push(`/tickets/${tokenId}`); return; }
 
       const eventId = Number(ticketData[0]);
+      const ticketTypeId = Number(ticketData[1]);
       const eventData = await readEvent(eventId);
 
       // Decode event metadata
@@ -108,7 +112,10 @@ export default function TicketQRPage() {
         venue: 'Venue TBD',
         startDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
         isCancelled: eventData ? (eventData[11] as boolean) : false,
+        imageUrl: undefined as string | undefined,
       };
+
+      let ticketTypeName = 'General Admission';
 
       if (eventData) {
         const metadataURI = eventData[2] as string;
@@ -125,16 +132,29 @@ export default function TicketQRPage() {
               venue: metadata.venue || eventMetadata.venue,
               startDate: metadata.startDate || eventMetadata.startDate,
               isCancelled: eventData[11] as boolean,
+              imageUrl: metadata.imageUrl,
             };
           }
         } catch (err) {
           console.error('[QR Page] Metadata decode error:', err);
         }
+
+        // Read ticket type name
+        try {
+          const ticketTypeData = await readTicketType(eventId, ticketTypeId);
+          if (ticketTypeData) {
+            ticketTypeName = ticketTypeData[1] as string;
+          }
+        } catch (err) {
+          console.error('[QR Page] Error reading ticket type:', err);
+        }
       }
 
       setTicket({
         tokenId,
-        eventId: Number(ticketData[0]),
+        eventId,
+        ticketTypeId,
+        ticketTypeName,
         redeemed: ticketData[5] as boolean,
         active: ticketData[6] as boolean,
         owner,

@@ -1,5 +1,22 @@
 import { formatEther } from 'viem';
 import { OwnershipEventType, type OwnershipRecord } from '@/lib/ownershipHistory';
+import { 
+  Ticket, 
+  ShoppingCart, 
+  Tag, 
+  X, 
+  RefreshCw, 
+  CheckCircle2, 
+  Send,
+  TrendingUp,
+  TrendingDown,
+  Shield,
+  ShieldCheck,
+  ShieldAlert,
+  AlertTriangle,
+  ExternalLink,
+  ArrowRightLeft
+} from 'lucide-react';
 
 interface OwnershipTimelineProps {
   history: OwnershipRecord[];
@@ -11,78 +28,65 @@ export function OwnershipTimeline({
   compact = false,
 }: OwnershipTimelineProps) {
   const getEventIcon = (eventType: OwnershipEventType) => {
-    const iconClass = "w-4 h-4";
     switch (eventType) {
       case OwnershipEventType.MINTED:
-        return (
-          <svg className={iconClass} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
-          </svg>
-        );
+        return <Ticket className="w-4 h-4" />;
       case OwnershipEventType.PURCHASED:
-        return (
-          <svg className={iconClass} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-          </svg>
-        );
+        return <ShoppingCart className="w-4 h-4" />;
       case OwnershipEventType.LISTED:
-        return (
-          <svg className={iconClass} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-          </svg>
-        );
+        return <Tag className="w-4 h-4" />;
       case OwnershipEventType.LISTING_CANCELLED:
-        return (
-          <svg className={iconClass} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        );
+        return <X className="w-4 h-4" />;
       case OwnershipEventType.RESOLD:
-        return (
-          <svg className={iconClass} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-        );
+        return <RefreshCw className="w-4 h-4" />;
       case OwnershipEventType.REDEEMED:
-        return (
-          <svg className={iconClass} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-          </svg>
-        );
+        return <CheckCircle2 className="w-4 h-4" />;
       case OwnershipEventType.TRANSFERRED:
-        return (
-          <svg className={iconClass} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-          </svg>
-        );
+        return <Send className="w-4 h-4" />;
       default:
-        return (
-          <svg className={iconClass} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>
-        );
+        return <ArrowRightLeft className="w-4 h-4" />;
     }
   };
 
   const getEventColor = (eventType: OwnershipEventType) => {
     switch (eventType) {
       case OwnershipEventType.MINTED:
-        return 'border-blue-500';
+        return 'border-[#8B5CF6]'; // purple
       case OwnershipEventType.PURCHASED:
-        return 'border-green-500';
+        return 'border-[#10B981]'; // green
       case OwnershipEventType.LISTED:
-        return 'border-yellow-500';
+        return 'border-[#F59E0B]'; // amber
       case OwnershipEventType.LISTING_CANCELLED:
-        return 'border-red-500';
+        return 'border-[#EF4444]'; // red
       case OwnershipEventType.RESOLD:
-        return 'border-purple-500';
+        return 'border-[#3B82F6]'; // blue
       case OwnershipEventType.REDEEMED:
-        return 'border-green-400';
+        return 'border-[#059669]'; // emerald
       case OwnershipEventType.TRANSFERRED:
-        return 'border-gray-500';
+        return 'border-[#6B7280]'; // gray
       default:
-        return 'border-gray-400';
+        return 'border-[#9CA3AF]';
+    }
+  };
+
+  const getEventBgColor = (eventType: OwnershipEventType) => {
+    switch (eventType) {
+      case OwnershipEventType.MINTED:
+        return 'bg-[#8B5CF6]/10 text-[#8B5CF6]';
+      case OwnershipEventType.PURCHASED:
+        return 'bg-[#10B981]/10 text-[#10B981]';
+      case OwnershipEventType.LISTED:
+        return 'bg-[#F59E0B]/10 text-[#F59E0B]';
+      case OwnershipEventType.LISTING_CANCELLED:
+        return 'bg-[#EF4444]/10 text-[#EF4444]';
+      case OwnershipEventType.RESOLD:
+        return 'bg-[#3B82F6]/10 text-[#3B82F6]';
+      case OwnershipEventType.REDEEMED:
+        return 'bg-[#059669]/10 text-[#059669]';
+      case OwnershipEventType.TRANSFERRED:
+        return 'bg-[#6B7280]/10 text-[#6B7280]';
+      default:
+        return 'bg-[#9CA3AF]/10 text-[#9CA3AF]';
     }
   };
 
@@ -118,12 +122,14 @@ export function OwnershipTimeline({
         {history.map((record, index) => (
           <div
             key={record.id}
-            className="flex items-center gap-3 text-sm"
+            className={`flex items-center gap-3 p-3 rounded-lg ${getEventBgColor(record.eventType)}`}
           >
-            <span className="text-2xl flex items-center justify-center w-8 h-8">{getEventIcon(record.eventType)}</span>
+            <span className="flex items-center justify-center w-8 h-8">
+              {getEventIcon(record.eventType)}
+            </span>
             <div className="flex-1">
-              <p className="font-medium">{getEventTitle(record.eventType)}</p>
-              <p className="text-xs text-muted-foreground">
+              <p className="font-medium text-[13px]">{getEventTitle(record.eventType)}</p>
+              <p className="text-[11px] opacity-70">
                 {record.timestamp.toLocaleDateString('en-US', {
                   month: 'short',
                   day: 'numeric',
@@ -134,7 +140,7 @@ export function OwnershipTimeline({
               </p>
             </div>
             {record.price && (
-              <span className="font-semibold">
+              <span className="font-semibold text-[13px]">
                 {parseFloat(formatEther(BigInt(record.price))).toFixed(4)} ETH
               </span>
             )}
@@ -147,32 +153,32 @@ export function OwnershipTimeline({
   return (
     <div className="relative">
       {/* Timeline line */}
-      <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-border"></div>
+      <div className="absolute left-[18px] top-0 bottom-0 w-[2px] bg-gradient-to-b from-[#8B5CF6] via-[#3B82F6] to-transparent opacity-30"></div>
 
-      <div className="space-y-6">
+      <div className="space-y-4">
         {history.map((record, index) => (
-          <div key={record.id} className="relative pl-14">
+          <div key={record.id} className="relative pl-12">
             {/* Timeline dot */}
             <div
-              className={`absolute left-3 w-6 h-6 rounded-full border-4 ${getEventColor(
+              className={`absolute left-0 w-[38px] h-[38px] rounded-full border-2 ${getEventColor(
                 record.eventType
-              )} bg-background flex items-center justify-center text-xs`}
+              )} ${getEventBgColor(record.eventType)} flex items-center justify-center shadow-lg`}
             >
-              <span className="scale-75">{getEventIcon(record.eventType)}</span>
+              {getEventIcon(record.eventType)}
             </div>
 
             {/* Event card */}
-            <div className="glass rounded-lg p-4 border-l-4 ${getEventColor(record.eventType)}">
-              <div className="flex items-start justify-between mb-2">
-                <div>
-                  <h4 className="font-semibold text-lg">
+            <div className="dp-card rounded-xl p-4 border-l-[3px] hover:shadow-lg transition-shadow duration-200" style={{ borderLeftColor: getEventColor(record.eventType).replace('border-', '') }}>
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex-1">
+                  <h4 className="font-semibold text-[15px] mb-1">
                     {getEventTitle(record.eventType)}
                   </h4>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>
                     {record.timestamp.toLocaleDateString('en-US', {
-                      weekday: 'long',
+                      weekday: 'short',
                       year: 'numeric',
-                      month: 'long',
+                      month: 'short',
                       day: 'numeric',
                       hour: '2-digit',
                       minute: '2-digit',
@@ -180,47 +186,50 @@ export function OwnershipTimeline({
                   </p>
                 </div>
                 {record.price && (
-                  <div className="text-right">
-                    <p className="text-xs text-muted-foreground">Price</p>
-                    <p className="text-lg font-bold">
+                  <div className="text-right ml-4">
+                    <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>Price</p>
+                    <p className="text-[16px] font-bold" style={{ color: 'var(--primary)' }}>
                       {parseFloat(formatEther(BigInt(record.price))).toFixed(4)} ETH
                     </p>
                   </div>
                 )}
               </div>
 
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                {record.fromAddress && (
-                  <div>
-                    <p className="text-muted-foreground mb-1">From</p>
-                    <p className="font-mono">{formatAddress(record.fromAddress)}</p>
-                  </div>
-                )}
-                {record.toAddress && (
-                  <div>
-                    <p className="text-muted-foreground mb-1">To</p>
-                    <p className="font-mono">{formatAddress(record.toAddress)}</p>
-                  </div>
-                )}
-              </div>
+              {(record.fromAddress || record.toAddress) && (
+                <div className="grid grid-cols-2 gap-3 mb-3">
+                  {record.fromAddress && (
+                    <div className="p-2 rounded-lg" style={{ backgroundColor: 'var(--card-bg)' }}>
+                      <p className="text-[11px] mb-1" style={{ color: 'var(--text-muted)' }}>From</p>
+                      <p className="font-mono text-[12px]">{formatAddress(record.fromAddress)}</p>
+                    </div>
+                  )}
+                  {record.toAddress && (
+                    <div className="p-2 rounded-lg" style={{ backgroundColor: 'var(--card-bg)' }}>
+                      <p className="text-[11px] mb-1" style={{ color: 'var(--text-muted)' }}>To</p>
+                      <p className="font-mono text-[12px]">{formatAddress(record.toAddress)}</p>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {record.transactionHash && (
-                <div className="mt-3 pt-3 border-t border-border">
-                  <p className="text-xs text-muted-foreground mb-1">Transaction</p>
+                <div className="pt-2 border-t" style={{ borderColor: 'var(--border-color)' }}>
+                  <p className="text-[11px] mb-1" style={{ color: 'var(--text-muted)' }}>Transaction</p>
                   <a
-                    href={`https://etherscan.io/tx/${record.transactionHash}`}
+                    href={`https://amoy.polygonscan.com/tx/${record.transactionHash}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-xs font-mono text-primary hover:underline flex items-center gap-1"
+                    className="text-[12px] font-mono hover:underline flex items-center gap-1.5"
+                    style={{ color: 'var(--primary)' }}
                   >
                     {formatAddress(record.transactionHash)}
-                    <span>↗</span>
+                    <ExternalLink className="w-3 h-3" />
                   </a>
                 </div>
               )}
 
-              {record.metadata && (
-                <div className="mt-2 text-xs text-muted-foreground">
+              {record.metadata && (record.metadata.reason || record.metadata.eventId) && (
+                <div className="mt-2 pt-2 border-t text-[11px]" style={{ borderColor: 'var(--border-color)', color: 'var(--text-muted)' }}>
                   {record.metadata.reason && <p>• {record.metadata.reason}</p>}
                   {record.metadata.eventId && <p>• Event #{record.metadata.eventId}</p>}
                 </div>
@@ -245,72 +254,87 @@ interface OwnershipStatsCardProps {
 }
 
 export function OwnershipStatsCard({ stats }: OwnershipStatsCardProps) {
+  const calculateValueChange = () => {
+    const current = parseFloat(formatEther(BigInt(stats.currentPrice)));
+    const original = parseFloat(formatEther(BigInt(stats.originalPrice)));
+    const change = ((current - original) / original) * 100;
+    return {
+      percentage: change.toFixed(1),
+      isPositive: change > 0,
+      isNegative: change < 0,
+    };
+  };
+
+  const valueChange = calculateValueChange();
+
   return (
-    <div className="glass rounded-xl p-6">
-      <h3 className="text-xl font-semibold mb-4">Ownership Statistics</h3>
+    <div className="dp-card rounded-xl p-5">
+      <h3 className="text-[16px] font-semibold mb-4 flex items-center gap-2">
+        <ArrowRightLeft className="w-5 h-5" style={{ color: 'var(--primary)' }} />
+        Ownership Statistics
+      </h3>
       
-      <div className="grid grid-cols-2 gap-4">
-        <div className="p-3 bg-muted/50 rounded-lg">
-          <p className="text-sm text-muted-foreground mb-1">Transfers</p>
-          <p className="text-2xl font-bold">{stats.totalTransfers}</p>
+      <div className="grid grid-cols-2 gap-3 mb-4">
+        <div className="p-3 rounded-lg border" style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)' }}>
+          <p className="text-[11px] mb-1" style={{ color: 'var(--text-muted)' }}>Transfers</p>
+          <p className="text-[24px] font-bold">{stats.totalTransfers}</p>
         </div>
 
-        <div className="p-3 bg-muted/50 rounded-lg">
-          <p className="text-sm text-muted-foreground mb-1">Resales</p>
-          <p className="text-2xl font-bold">{stats.totalResales}</p>
+        <div className="p-3 rounded-lg border" style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)' }}>
+          <p className="text-[11px] mb-1" style={{ color: 'var(--text-muted)' }}>Resales</p>
+          <p className="text-[24px] font-bold">{stats.totalResales}</p>
         </div>
+      </div>
 
-        <div className="p-3 bg-muted/50 rounded-lg">
-          <p className="text-sm text-muted-foreground mb-1">Original Price</p>
-          <p className="text-lg font-bold">
+      <div className="grid grid-cols-2 gap-3">
+        <div className="p-3 rounded-lg border" style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)' }}>
+          <p className="text-[11px] mb-1" style={{ color: 'var(--text-muted)' }}>Original Price</p>
+          <p className="text-[14px] font-bold">
             {parseFloat(formatEther(BigInt(stats.originalPrice))).toFixed(4)} ETH
           </p>
         </div>
 
-        <div className="p-3 bg-muted/50 rounded-lg">
-          <p className="text-sm text-muted-foreground mb-1">Current Price</p>
-          <p className="text-lg font-bold">
+        <div className="p-3 rounded-lg border" style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)' }}>
+          <p className="text-[11px] mb-1" style={{ color: 'var(--text-muted)' }}>Current Price</p>
+          <p className="text-[14px] font-bold">
             {parseFloat(formatEther(BigInt(stats.currentPrice))).toFixed(4)} ETH
           </p>
         </div>
 
-        <div className="p-3 bg-muted/50 rounded-lg">
-          <p className="text-sm text-muted-foreground mb-1">Highest Price</p>
-          <p className="text-lg font-bold text-green-400">
+        <div className="p-3 rounded-lg border" style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)', borderColor: '#10B981' }}>
+          <p className="text-[11px] mb-1 flex items-center gap-1" style={{ color: '#10B981' }}>
+            <TrendingUp className="w-3 h-3" />
+            Highest Price
+          </p>
+          <p className="text-[14px] font-bold" style={{ color: '#10B981' }}>
             {parseFloat(formatEther(BigInt(stats.highestPrice))).toFixed(4)} ETH
           </p>
         </div>
 
-        <div className="p-3 bg-muted/50 rounded-lg">
-          <p className="text-sm text-muted-foreground mb-1">Total Volume</p>
-          <p className="text-lg font-bold text-blue-400">
+        <div className="p-3 rounded-lg border" style={{ backgroundColor: 'rgba(139, 92, 246, 0.1)', borderColor: '#8B5CF6' }}>
+          <p className="text-[11px] mb-1" style={{ color: '#8B5CF6' }}>Total Volume</p>
+          <p className="text-[14px] font-bold" style={{ color: '#8B5CF6' }}>
             {parseFloat(formatEther(BigInt(stats.totalVolume))).toFixed(4)} ETH
           </p>
         </div>
       </div>
 
-      <div className="mt-4 pt-4 border-t border-border">
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">Value Change:</span>
-          <span
-            className={`font-semibold ${
-              BigInt(stats.currentPrice) > BigInt(stats.originalPrice)
-                ? 'text-green-400'
-                : BigInt(stats.currentPrice) < BigInt(stats.originalPrice)
-                ? 'text-red-400'
-                : 'text-muted-foreground'
-            }`}
-          >
-            {BigInt(stats.currentPrice) > BigInt(stats.originalPrice) ? '+' : ''}
-            {(
-              ((parseFloat(formatEther(BigInt(stats.currentPrice))) -
-                parseFloat(formatEther(BigInt(stats.originalPrice)))) /
-                parseFloat(formatEther(BigInt(stats.originalPrice)))) *
-              100
-            ).toFixed(1)}
-            %
-          </span>
-        </div>
+      <div className="mt-4 pt-4 border-t flex items-center justify-between" style={{ borderColor: 'var(--border-color)' }}>
+        <span className="text-[13px]" style={{ color: 'var(--text-muted)' }}>Value Change:</span>
+        <span
+          className={`font-semibold text-[14px] flex items-center gap-1.5 ${
+            valueChange.isPositive
+              ? 'text-[#10B981]'
+              : valueChange.isNegative
+              ? 'text-[#EF4444]'
+              : ''
+          }`}
+          style={!valueChange.isPositive && !valueChange.isNegative ? { color: 'var(--text-muted)' } : {}}
+        >
+          {valueChange.isPositive && <TrendingUp className="w-4 h-4" />}
+          {valueChange.isNegative && <TrendingDown className="w-4 h-4" />}
+          {valueChange.isPositive ? '+' : ''}{valueChange.percentage}%
+        </span>
       </div>
     </div>
   );
@@ -318,76 +342,130 @@ export function OwnershipStatsCard({ stats }: OwnershipStatsCardProps) {
 
 interface ProvenanceCardProps {
   provenance: {
-    isVerified: boolean;
-    mintDate: Date;
-    transferCount: number;
-    chainOfCustody: {
-      owner: string;
-      from: Date;
-      to: Date | null;
-      verified: boolean;
-    }[];
+    isAuthentic: boolean;
+    verificationScore: number;
+    checks: {
+      contractVerified: boolean;
+      ownershipValid: boolean;
+      noSuspiciousActivity: boolean;
+      chainIntact: boolean;
+    };
+    warnings: string[];
   };
 }
 
 export function ProvenanceCard({ provenance }: ProvenanceCardProps) {
+  const getCheckIcon = (isValid: boolean) => {
+    return isValid ? (
+      <ShieldCheck className="w-4 h-4 text-[#10B981]" />
+    ) : (
+      <ShieldAlert className="w-4 h-4 text-[#EF4444]" />
+    );
+  };
+
   return (
-    <div className="glass rounded-xl p-6">
+    <div className="dp-card rounded-xl p-5">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-xl font-semibold">Provenance Verification</h3>
-        {provenance.isVerified && (
-          <span className="px-3 py-1 rounded-full text-sm font-medium bg-green-500/20 text-green-400 flex items-center gap-1.5">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
+        <h3 className="text-[16px] font-semibold flex items-center gap-2">
+          <Shield className="w-5 h-5" style={{ color: 'var(--primary)' }} />
+          Provenance Verification
+        </h3>
+        {provenance.isAuthentic ? (
+          <span className="px-3 py-1.5 rounded-full text-[12px] font-medium flex items-center gap-1.5" style={{ backgroundColor: 'rgba(16, 185, 129, 0.15)', color: '#10B981' }}>
+            <CheckCircle2 className="w-3.5 h-3.5" />
             Verified
+          </span>
+        ) : (
+          <span className="px-3 py-1.5 rounded-full text-[12px] font-medium flex items-center gap-1.5" style={{ backgroundColor: 'rgba(239, 68, 68, 0.15)', color: '#EF4444' }}>
+            <X className="w-3.5 h-3.5" />
+            Unverified
           </span>
         )}
       </div>
 
-      <div className="space-y-3 mb-4">
-        <div className="flex items-center justify-between">
-          <span className="text-muted-foreground">Mint Date:</span>
-          <span className="font-semibold">
-            {provenance.mintDate.toLocaleDateString()}
+      {/* Verification Score */}
+      <div className="mb-4 p-4 rounded-lg border" style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)' }}>
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-[13px]" style={{ color: 'var(--text-muted)' }}>Verification Score</span>
+          <span className="text-[20px] font-bold" style={{ color: provenance.verificationScore === 100 ? '#10B981' : 'var(--primary)' }}>
+            {provenance.verificationScore}%
           </span>
         </div>
-        <div className="flex items-center justify-between">
-          <span className="text-muted-foreground">Total Transfers:</span>
-          <span className="font-semibold">{provenance.transferCount}</span>
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="text-muted-foreground">Chain Integrity:</span>
-          <span className="font-semibold text-green-400">100%</span>
+        <div className="w-full h-2 rounded-full overflow-hidden" style={{ backgroundColor: 'rgba(139, 92, 246, 0.2)' }}>
+          <div 
+            className="h-full rounded-full transition-all duration-500"
+            style={{ 
+              width: `${provenance.verificationScore}%`,
+              backgroundColor: provenance.verificationScore === 100 ? '#10B981' : '#8B5CF6'
+            }}
+          />
         </div>
       </div>
 
-      <div className="pt-4 border-t border-border">
-        <h4 className="font-semibold mb-3 text-sm">Chain of Custody</h4>
-        <div className="space-y-2">
-          {provenance.chainOfCustody.map((custody, index) => (
-            <div
-              key={index}
-              className="flex items-center gap-2 text-sm p-2 bg-muted/50 rounded"
-            >
-              <span className="text-green-400">
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              </span>
-              <div className="flex-1">
-                <p className="font-mono text-xs">
-                  {custody.owner.slice(0, 6)}...{custody.owner.slice(-4)}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {custody.from.toLocaleDateString()} -{' '}
-                  {custody.to ? custody.to.toLocaleDateString() : 'Present'}
-                </p>
-              </div>
-            </div>
-          ))}
+      {/* Security Checks */}
+      <div className="space-y-2.5">
+        <div className="flex items-center justify-between p-2.5 rounded-lg" style={{ backgroundColor: 'var(--card-bg)' }}>
+          <span className="text-[13px] flex items-center gap-2">
+            {getCheckIcon(provenance.checks.contractVerified)}
+            Contract Verified
+          </span>
+          <span className="text-[12px] font-medium" style={{ color: provenance.checks.contractVerified ? '#10B981' : '#EF4444' }}>
+            {provenance.checks.contractVerified ? 'Valid' : 'Invalid'}
+          </span>
+        </div>
+
+        <div className="flex items-center justify-between p-2.5 rounded-lg" style={{ backgroundColor: 'var(--card-bg)' }}>
+          <span className="text-[13px] flex items-center gap-2">
+            {getCheckIcon(provenance.checks.ownershipValid)}
+            Ownership Valid
+          </span>
+          <span className="text-[12px] font-medium" style={{ color: provenance.checks.ownershipValid ? '#10B981' : '#EF4444' }}>
+            {provenance.checks.ownershipValid ? 'Valid' : 'Invalid'}
+          </span>
+        </div>
+
+        <div className="flex items-center justify-between p-2.5 rounded-lg" style={{ backgroundColor: 'var(--card-bg)' }}>
+          <span className="text-[13px] flex items-center gap-2">
+            {getCheckIcon(provenance.checks.noSuspiciousActivity)}
+            No Suspicious Activity
+          </span>
+          <span className="text-[12px] font-medium" style={{ color: provenance.checks.noSuspiciousActivity ? '#10B981' : '#EF4444' }}>
+            {provenance.checks.noSuspiciousActivity ? 'Clear' : 'Detected'}
+          </span>
+        </div>
+
+        <div className="flex items-center justify-between p-2.5 rounded-lg" style={{ backgroundColor: 'var(--card-bg)' }}>
+          <span className="text-[13px] flex items-center gap-2">
+            {getCheckIcon(provenance.checks.chainIntact)}
+            Chain Intact
+          </span>
+          <span className="text-[12px] font-medium" style={{ color: provenance.checks.chainIntact ? '#10B981' : '#EF4444' }}>
+            {provenance.checks.chainIntact ? 'Intact' : 'Broken'}
+          </span>
         </div>
       </div>
+
+      {/* Warnings */}
+      {provenance.warnings.length > 0 && (
+        <div className="mt-4 pt-4 border-t" style={{ borderColor: 'var(--border-color)' }}>
+          <h4 className="font-semibold mb-2.5 text-[13px] flex items-center gap-1.5" style={{ color: '#F59E0B' }}>
+            <AlertTriangle className="w-4 h-4" />
+            Warnings
+          </h4>
+          <div className="space-y-2">
+            {provenance.warnings.map((warning, index) => (
+              <div
+                key={index}
+                className="flex items-start gap-2 text-[12px] p-2.5 rounded-lg border"
+                style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)', borderColor: '#F59E0B' }}
+              >
+                <AlertTriangle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" style={{ color: '#F59E0B' }} />
+                <p className="flex-1" style={{ color: '#F59E0B' }}>{warning}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

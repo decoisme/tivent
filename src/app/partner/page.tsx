@@ -53,7 +53,7 @@ export default function PartnerPage() {
           </h1>
           
           <p className="text-[16px] max-w-2xl mx-auto" style={{ color: 'var(--text-secondary)' }}>
-            Join DecentraPass as an event organizer or gate officer. 
+            Join Tivent as an event organizer or gate officer. 
             Create unforgettable experiences and help build the future of decentralized ticketing.
           </p>
         </div>
@@ -236,7 +236,7 @@ export default function PartnerPage() {
                 Connect Your Wallet
               </h3>
               <p className="text-[14px]" style={{ color: 'var(--text-secondary)' }}>
-                Use MetaMask or any Web3 wallet to connect to DecentraPass
+                Use MetaMask or any Web3 wallet to connect to Tivent
               </p>
             </div>
 
@@ -271,7 +271,7 @@ export default function PartnerPage() {
         {/* Stats */}
         <div className="dp-surface p-8 mb-12">
           <h2 className="text-[24px] font-semibold tracking-[-0.03em] mb-6 text-center" style={{ color: 'var(--text-primary)' }}>
-            Why Partner with DecentraPass?
+            Why Partner with Tivent?
           </h2>
           
           <div className="grid md:grid-cols-4 gap-8">
@@ -324,7 +324,7 @@ export default function PartnerPage() {
               Ready to Get Started?
             </h3>
             <p className="text-[14px] mb-4" style={{ color: 'var(--text-secondary)' }}>
-              Connect your wallet to choose your role and start partnering with DecentraPass
+              Connect your wallet to choose your role and start partnering with Tivent
             </p>
             <div className="flex justify-center">
               <button

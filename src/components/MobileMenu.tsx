@@ -194,7 +194,7 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
           style={{ borderTop: '1px solid var(--border)' }}
         >
           <p className="text-[11px] text-center" style={{ color: 'var(--text-muted)' }}>
-            DecentraPass v1.0
+            Tivent v1.0
           </p>
           <p className="text-[10px] text-center mt-1" style={{ color: 'var(--text-muted)' }}>
             Powered by Blockchain
