@@ -1,0 +1,56 @@
+{
+  "name": "tivent",
+  "version": "1.0.0",
+  "description": "Decentralized event ticketing platform",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "listener": "node scripts/event-listener.js",
+    "sync": "node -e \"fetch('http://localhost:3000/api/sync?from=0&to=1000').then(r=>r.json()).then(console.log)\""
+  },
+  "keywords": [
+    "blockchain",
+    "ticketing",
+    "web3",
+    "nft"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.117.2",
+    "@tanstack/react-query": "^5.104.0",
+    "@types/node": "^26.6.3",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "autoprefixer": "^10.6.1",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "date-fns": "^4.4.0",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^16.3.7",
+    "ethers": "^6.17.0",
+    "gsap": "^3.15.0",
+    "jsqr": "^1.4.0",
+    "lucide-react": "^1.49.0",
+    "next": "^16.3.7",
+    "postcss": "^8.5.28",
+    "qrcode": "^1.5.4",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "react-webcam": "^7.2.0",
+    "tailwind-merge": "^3.7.0",
+    "tailwindcss": "^4.3.3",
+    "tailwindcss-animate": "^1.0.7",
+    "typescript": "^7.0.2",
+    "viem": "^2.57.0",
+    "wagmi": "^3.7.7",
+    "xendit-node": "^7.0.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/qrcode": "^1.5.6"
+  }
+}
