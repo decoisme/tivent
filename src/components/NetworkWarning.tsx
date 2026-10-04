@@ -65,7 +65,7 @@ export function NetworkWarning() {
   };
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-[60] bg-yellow-500/10 border-b border-yellow-500/20 backdrop-blur-sm">
+    <div className="fixed top-0 left-0 right-0 z-[100] bg-yellow-500/10 border-b border-yellow-500/20 backdrop-blur-sm">
       <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-3">
