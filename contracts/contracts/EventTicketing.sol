@@ -4,8 +4,8 @@ pragma solidity ^0.8.24;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/utils/Pausable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
 
 /**
  * @title EventTicketing
@@ -172,7 +172,7 @@ contract EventTicketing is ERC721, ERC721URIStorage, Ownable, ReentrancyGuard, P
     
     // ==================== Constructor ====================
     
-    constructor() ERC721("TiventTicket", "TVNT") Ownable(msg.sender) {
+    constructor() ERC721("TiventTicket", "TVNT") {
         _nextTokenId = 1;
         _nextEventId = 1;
     }
@@ -772,6 +772,13 @@ contract EventTicketing is ERC721, ERC721URIStorage, Ownable, ReentrancyGuard, P
     }
     
     // ==================== Override Functions ====================
+    
+    function _burn(uint256 tokenId)
+        internal
+        override(ERC721, ERC721URIStorage)
+    {
+        super._burn(tokenId);
+    }
     
     function tokenURI(uint256 tokenId)
         public

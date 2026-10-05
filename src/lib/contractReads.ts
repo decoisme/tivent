@@ -105,6 +105,35 @@ export const EVENT_TICKETING_ABI = [
     inputs: [{ name: 'tokenId', type: 'uint256' }],
     outputs: [{ type: 'bool' }],
   },
+  // Gate officer management
+  {
+    name: 'gateOfficers',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [{ name: 'officer', type: 'address' }],
+    outputs: [{ type: 'bool' }],
+  },
+  {
+    name: 'addGateOfficer',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [{ name: 'officer', type: 'address' }],
+    outputs: [],
+  },
+  {
+    name: 'removeGateOfficer',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [{ name: 'officer', type: 'address' }],
+    outputs: [],
+  },
+  {
+    name: 'owner',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ type: 'address' }],
+  },
   {
     name: 'Transfer',
     type: 'event',
@@ -134,6 +163,9 @@ export const EVENT_TICKETING_ABI = [
     ],
   },
 ] as const;
+
+// Export for other hooks
+export const ABI = EVENT_TICKETING_ABI;
 
 export const CONTRACT_ADDRESS = (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || '0x0000000000000000000000000000000000000000') as Address;
 

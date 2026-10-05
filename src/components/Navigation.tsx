@@ -43,6 +43,9 @@ export function Navigation() {
               <button onClick={() => router.push('/partner')} className="dp-tab">
                 Partner with Us
               </button>
+              <button onClick={() => router.push('/admin')} className="dp-tab">
+                Admin
+              </button>
             </div>
           </div>
 

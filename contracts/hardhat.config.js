@@ -10,7 +10,7 @@ module.exports = {
         enabled: true,
         runs: 200,
       },
-      evmVersion: "cancun",
+      evmVersion: "shanghai", // Compatible with Polygon Amoy, supports more opcodes than paris
     },
   },
   networks: {
