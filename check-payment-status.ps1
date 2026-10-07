@@ -2,10 +2,12 @@
 # Usage: .\check-payment-status.ps1 "TIVENT-1-1791394621711-ofl88m"
 
 param(
-    [string]$ExternalId = "TIVENT-1-1791394621711-ofl88m"
+    [string]$ExternalId = "TIVENT-1-1791394621711-ofl88m",
+    [string]$BaseUrl = "https://tivent-adsmc81z5-decoismes-projects.vercel.app"
 )
 
-$BaseUrl = "https://tivent.vercel.app"
+# Use deployment URL that's confirmed working
+# Update this to latest deployment URL from: vercel ls
 
 Write-Host "[CHECK] Checking Payment Status for: $ExternalId" -ForegroundColor Cyan
 Write-Host "============================================" -ForegroundColor Gray
