@@ -27,13 +27,13 @@ function PaymentSuccessContent() {
 
   const checkPaymentStatus = async () => {
     try {
-      const response = await fetch(`/api/payment/xendit/webhook?externalId=${externalId}`);
+      const response = await fetch(`/api/payment/xendit/status?externalId=${externalId}`);
       const data = await response.json();
 
-      if (data.payment) {
+      if (data.success && data.payment) {
         setPayment(data.payment);
       } else {
-        setError('Payment not found');
+        setError(data.error || 'Payment not found');
       }
     } catch (err: any) {
       console.error('Error checking payment:', err);
@@ -76,9 +76,10 @@ function PaymentSuccessContent() {
     );
   }
 
-  const isPaid = payment.status === 'PAID';
+  const isPaid = payment.status === 'PAID' || payment.status === 'PAID_PENDING_MINT';
   const isPending = payment.status === 'PENDING';
   const ticketMinted = payment.ticket_minted;
+  const needsWallet = payment.status === 'PAID_PENDING_MINT' && !payment.buyer_address;
 
   return (
     <div className="min-h-screen pt-[72px] pb-16 px-4">
@@ -154,7 +155,7 @@ function PaymentSuccessContent() {
           </div>
 
           {/* Ticket Minting Status */}
-          {isPaid && (
+          {isPaid && !needsWallet && (
             <div
               className="mb-8 p-4 rounded-lg text-left"
               style={{
@@ -194,6 +195,35 @@ function PaymentSuccessContent() {
                   </a>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Wallet Connection Needed */}
+          {needsWallet && (
+            <div
+              className="mb-8 p-4 rounded-lg text-left"
+              style={{
+                backgroundColor: 'var(--warning-muted)',
+                border: '1px solid var(--warning)',
+              }}
+            >
+              <div className="flex items-start gap-3">
+                <ExternalLink size={20} style={{ color: 'var(--warning)' }} />
+                <div className="flex-1">
+                  <p className="text-[13px] font-semibold mb-1" style={{ color: 'var(--warning)' }}>
+                    Connect Wallet to Receive Ticket
+                  </p>
+                  <p className="text-[11px] mb-3" style={{ color: 'var(--text-secondary)' }}>
+                    Your payment was successful! To receive your NFT ticket, please connect your wallet and claim it.
+                  </p>
+                  <button
+                    onClick={() => router.push(`/tickets?claimPayment=${payment.external_id}`)}
+                    className="dp-btn-primary text-[12px] py-2"
+                  >
+                    Connect Wallet & Claim Ticket
+                  </button>
+                </div>
+              </div>
             </div>
           )}
 

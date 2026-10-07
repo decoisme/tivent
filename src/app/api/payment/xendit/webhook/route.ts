@@ -148,7 +148,28 @@ export async function POST(request: NextRequest) {
 
     // If payment is successful, mint the ticket
     if (status === 'PAID' && !payment.ticket_minted) {
-      console.log('Payment successful, minting ticket for:', payment.buyer_address);
+      console.log('Payment successful for:', externalId);
+
+      // Check if buyer provided a wallet address
+      if (!payment.buyer_address) {
+        console.log('No buyer address provided, ticket will be minted manually later');
+        
+        // Update status to indicate ticket is pending manual claim
+        await supabase
+          .from('payments')
+          .update({
+            status: 'PAID_PENDING_MINT',
+            updated_at: new Date().toISOString(),
+          })
+          .eq('external_id', externalId);
+          
+        return NextResponse.json({ 
+          success: true, 
+          message: 'Payment successful, ticket pending wallet connection' 
+        });
+      }
+
+      console.log('Minting ticket for wallet:', payment.buyer_address);
 
       const mintResult = await mintTicketWithPlatformWallet(
         payment.event_id,
