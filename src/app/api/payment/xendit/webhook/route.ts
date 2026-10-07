@@ -146,8 +146,43 @@ export async function POST(request: NextRequest) {
       console.error('Failed to update payment:', updateError);
     }
 
-    // If payment is successful, mint the ticket
-    if (status === 'PAID' && !payment.ticket_minted) {
+    // If payment is successful, send verification email
+    if (status === 'PAID' && !payment.email_verified) {
+      console.log('Payment successful, sending verification email to:', payment.buyer_email);
+
+      // Send verification email
+      try {
+        const baseUrl = request.headers.get('origin') || 
+                        `${request.headers.get('x-forwarded-proto') || 'https'}://${request.headers.get('host')}`;
+        
+        const sendResponse = await fetch(`${baseUrl}/api/payment/xendit/send-verification`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ externalId }),
+        });
+
+        const sendResult = await sendResponse.json();
+        
+        if (sendResult.success) {
+          console.log('[webhook] Verification email sent');
+          
+          // Update status to PAID_PENDING_VERIFICATION
+          await supabase
+            .from('payments')
+            .update({
+              status: 'PAID_PENDING_VERIFICATION',
+            })
+            .eq('external_id', externalId);
+        } else {
+          console.error('[webhook] Failed to send verification email:', sendResult.error);
+        }
+      } catch (emailError) {
+        console.error('[webhook] Error sending verification email:', emailError);
+      }
+    }
+
+    // Only mint ticket if email is verified
+    if (status === 'PAID' && payment.email_verified && !payment.ticket_minted) {
       console.log('Payment successful for:', externalId);
 
       // Check if buyer provided a wallet address

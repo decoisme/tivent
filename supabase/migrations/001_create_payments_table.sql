@@ -22,8 +22,14 @@ CREATE TABLE IF NOT EXISTS payments (
   paid_amount NUMERIC,
   
   -- Payment status
-  status TEXT NOT NULL DEFAULT 'PENDING', -- PENDING, PAID, EXPIRED, FAILED
+  status TEXT NOT NULL DEFAULT 'PENDING', -- PENDING, PAID, PAID_PENDING_VERIFICATION, VERIFIED, EXPIRED, FAILED
   payment_method TEXT,
+  
+  -- Email verification
+  email_verified BOOLEAN DEFAULT FALSE,
+  verification_token TEXT UNIQUE,
+  verification_sent_at TIMESTAMP WITH TIME ZONE,
+  verified_at TIMESTAMP WITH TIME ZONE,
   
   -- Ticket minting info
   ticket_minted BOOLEAN DEFAULT FALSE,
@@ -46,6 +52,7 @@ CREATE INDEX IF NOT EXISTS idx_payments_buyer_address ON payments(buyer_address)
 CREATE INDEX IF NOT EXISTS idx_payments_event_id ON payments(event_id);
 CREATE INDEX IF NOT EXISTS idx_payments_status ON payments(status);
 CREATE INDEX IF NOT EXISTS idx_payments_created_at ON payments(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_payments_verification_token ON payments(verification_token);
 
 -- Create updated_at trigger
 CREATE OR REPLACE FUNCTION update_updated_at_column()

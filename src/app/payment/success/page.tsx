@@ -257,10 +257,24 @@ function PaymentSuccessContent() {
           )}
 
           {/* Email Confirmation */}
-          {payment.buyer_email && (
-            <div className="mb-8 p-4 rounded-lg text-left" style={{ backgroundColor: 'var(--surface)' }}>
+          {payment.buyer_email && !payment.email_verified && (
+            <div className="mb-8 p-4 rounded-lg text-left" style={{ backgroundColor: 'var(--warning-muted)', border: '1px solid var(--warning)' }}>
+              <h3 className="text-[13px] font-semibold mb-2" style={{ color: 'var(--warning)' }}>
+                📧 Email Verification Required
+              </h3>
+              <p className="text-[12px] mb-3" style={{ color: 'var(--text-secondary)' }}>
+                Please check your email <span className="font-medium">{payment.buyer_email}</span> and click the verification link to complete your purchase.
+              </p>
+              <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
+                Didn't receive the email? Check your spam folder or click the button below to resend.
+              </p>
+            </div>
+          )}
+
+          {payment.buyer_email && payment.email_verified && (
+            <div className="mb-8 p-4 rounded-lg text-left" style={{ backgroundColor: 'var(--success-muted)' }}>
               <p className="text-[12px]" style={{ color: 'var(--text-secondary)' }}>
-                📧 A confirmation email has been sent to <span className="font-medium">{payment.buyer_email}</span>
+                ✅ Email verified: <span className="font-medium">{payment.buyer_email}</span>
               </p>
             </div>
           )}
