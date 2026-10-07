@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
+import { sendVerificationEmail } from '@/lib/email';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -67,25 +68,37 @@ export async function POST(request: NextRequest) {
     // Generate verification URL
     const baseUrl = request.headers.get('origin') || 
                     `${request.headers.get('x-forwarded-proto') || 'https'}://${request.headers.get('host')}`;
-    const verificationUrl = `${baseUrl}/payment/verify?token=${verificationToken}`;
+    const verificationUrl = `${baseUrl}/api/payment/xendit/verify-email?token=${verificationToken}`;
 
-    // TODO: Send actual email using Resend/Nodemailer
-    // For now, we'll return the URL for testing
-    console.log('[send-verification] Verification URL:', verificationUrl);
-    console.log('[send-verification] Send to:', payment.buyer_email);
+    // Send verification email
+    console.log('[send-verification] Sending email to:', payment.buyer_email);
+    
+    const emailResult = await sendVerificationEmail({
+      to: payment.buyer_email,
+      verificationUrl,
+      eventName: `Event #${payment.event_id}`,
+      ticketQuantity: payment.ticket_quantity,
+      amount: payment.amount_idr,
+    });
 
-    // In production, uncomment and implement email sending:
-    // await sendVerificationEmail(payment.buyer_email, verificationUrl);
+    if (!emailResult.success) {
+      console.error('[send-verification] Email send failed:', emailResult.error);
+      return NextResponse.json(
+        { 
+          error: 'Failed to send verification email', 
+          details: emailResult.error,
+          success: false 
+        },
+        { status: 500 }
+      );
+    }
+
+    console.log('[send-verification] Email sent successfully:', emailResult.messageId);
 
     return NextResponse.json({
       success: true,
-      message: 'Verification email sent (simulated)',
-      // For development/testing - REMOVE in production!
-      debug: {
-        verificationUrl,
-        email: payment.buyer_email,
-        note: 'Copy this URL to verify email in testing',
-      },
+      message: 'Verification email sent successfully',
+      messageId: emailResult.messageId,
     });
   } catch (error: any) {
     console.error('[send-verification] Error:', error);
