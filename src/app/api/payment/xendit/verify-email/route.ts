@@ -112,7 +112,9 @@ export async function POST(request: NextRequest) {
             })
             .eq('verification_token', token);
 
-          console.log('[verify-email] Ticket minted successfully:', mintResult.txHash);
+          console.log('[verify-email] Ticket minted successfully!');
+          console.log('[verify-email] Token ID:', mintResult.tokenId);
+          console.log('[verify-email] TX Hash:', mintResult.txHash);
         } else {
           console.error('[verify-email] Failed to mint ticket:', mintResult.error);
           
