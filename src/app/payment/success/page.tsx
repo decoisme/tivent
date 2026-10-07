@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { CheckCircle2, Loader2, ExternalLink, Ticket, ArrowRight } from 'lucide-react';
 
-export default function PaymentSuccessPage() {
+function PaymentSuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const externalId = searchParams.get('externalId');
@@ -237,5 +237,23 @@ export default function PaymentSuccessPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PaymentSuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <div className="dp-surface p-12 max-w-md w-full text-center">
+          <Loader2 size={32} className="mx-auto mb-4 animate-spin" style={{ color: 'var(--accent)' }} />
+          <h2 className="text-[20px] font-semibold mb-2">Verifying Payment</h2>
+          <p className="text-[14px]" style={{ color: 'var(--text-secondary)' }}>
+            Please wait while we confirm your payment...
+          </p>
+        </div>
+      </div>
+    }>
+      <PaymentSuccessContent />
+    </Suspense>
   );
 }

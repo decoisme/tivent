@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { XCircle, AlertTriangle, ArrowLeft, RefreshCw } from 'lucide-react';
 
-export default function PaymentFailedPage() {
+function PaymentFailedContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const externalId = searchParams.get('externalId');
@@ -171,5 +171,21 @@ export default function PaymentFailedPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PaymentFailedPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <div className="dp-surface p-12 max-w-md w-full text-center">
+          <div className="dp-skeleton h-20 w-20 rounded-full mx-auto mb-4" />
+          <div className="dp-skeleton h-6 w-48 mx-auto mb-2" />
+          <div className="dp-skeleton h-4 w-full" />
+        </div>
+      </div>
+    }>
+      <PaymentFailedContent />
+    </Suspense>
   );
 }
