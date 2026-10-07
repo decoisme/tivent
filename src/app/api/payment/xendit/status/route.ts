@@ -10,6 +10,9 @@ const supabase = createClient(
 /**
  * GET /api/payment/xendit/status?externalId=xxx
  * Check payment status by external ID
+ * 
+ * This endpoint is used by the success page to fetch payment details
+ * after a successful Xendit payment.
  */
 export async function GET(request: NextRequest) {
   try {
