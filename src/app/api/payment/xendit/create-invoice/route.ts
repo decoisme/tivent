@@ -77,28 +77,36 @@ export async function POST(request: NextRequest) {
 
     // Save payment record to database
     try {
-      const { error: dbError } = await supabase
+      console.log('[create-invoice] Saving to database...', { externalId, totalPriceIDR });
+      
+      const paymentData = {
+        external_id: externalId,
+        invoice_id: invoiceResult.invoiceId,
+        event_id: eventId,
+        ticket_type_id: ticketTypeId,
+        ticket_quantity: ticketQuantity,
+        buyer_email: buyerEmail,
+        buyer_address: buyerAddress || null,
+        amount_idr: totalPriceIDR,
+        amount_eth: totalPricePOL, // Actually POL, not ETH
+        status: 'PENDING',
+        invoice_url: invoiceResult.invoiceUrl,
+        expiry_date: invoiceResult.expiryDate,
+      };
+
+      const { data: savedPayment, error: dbError } = await supabase
         .from('payments')
-        .insert({
-          external_id: externalId,
-          invoice_id: invoiceResult.invoiceId,
-          event_id: eventId,
-          ticket_type_id: ticketTypeId,
-          ticket_quantity: ticketQuantity,
-          buyer_email: buyerEmail,
-          buyer_address: buyerAddress || null,
-          amount_idr: totalPriceIDR,
-          amount_eth: totalPricePOL, // Actually POL, not ETH
-          status: 'PENDING',
-          invoice_url: invoiceResult.invoiceUrl,
-          expiry_date: invoiceResult.expiryDate,
-        });
+        .insert(paymentData)
+        .select()
+        .single();
 
       if (dbError) {
-        console.error('[create-invoice] DB error (non-blocking):', dbError.message);
+        console.error('[create-invoice] DB error (non-blocking):', dbError);
+      } else {
+        console.log('[create-invoice] Payment saved to DB:', savedPayment?.id);
       }
-    } catch (dbErr) {
-      console.error('[create-invoice] DB exception (non-blocking):', dbErr);
+    } catch (dbErr: any) {
+      console.error('[create-invoice] DB exception (non-blocking):', dbErr.message);
     }
 
     console.log('[create-invoice] Success!');

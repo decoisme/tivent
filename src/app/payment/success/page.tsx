@@ -17,9 +17,11 @@ function PaymentSuccessContent() {
   const [error, setError] = useState<string>('');
 
   useEffect(() => {
+    console.log('[PaymentSuccess] Component mounted, externalId:', externalId);
     if (externalId) {
       checkPaymentStatus();
     } else {
+      console.error('[PaymentSuccess] No externalId in URL');
       setError('Invalid payment reference');
       setLoading(false);
     }
@@ -27,17 +29,44 @@ function PaymentSuccessContent() {
 
   const checkPaymentStatus = async () => {
     try {
+      console.log('[PaymentSuccess] Checking payment status for:', externalId);
+      
       const response = await fetch(`/api/payment/xendit/status?externalId=${externalId}`);
+      
+      if (!response.ok) {
+        console.error('[PaymentSuccess] Status check failed:', response.status);
+        
+        // If endpoint doesn't exist (404), try webhook endpoint as fallback
+        if (response.status === 404) {
+          console.log('[PaymentSuccess] Trying webhook endpoint fallback...');
+          const fallbackResponse = await fetch(`/api/payment/xendit/webhook?externalId=${externalId}`);
+          
+          if (fallbackResponse.ok) {
+            const fallbackData = await fallbackResponse.json();
+            if (fallbackData.payment) {
+              setPayment(fallbackData.payment);
+              return;
+            }
+          }
+        }
+        
+        setError(`Payment not found (Status: ${response.status}). Your payment may still be processing.`);
+        setLoading(false);
+        return;
+      }
+      
       const data = await response.json();
 
       if (data.success && data.payment) {
+        console.log('[PaymentSuccess] Payment found:', data.payment.status);
         setPayment(data.payment);
       } else {
+        console.error('[PaymentSuccess] Payment not found in response:', data);
         setError(data.error || 'Payment not found');
       }
     } catch (err: any) {
-      console.error('Error checking payment:', err);
-      setError('Failed to load payment details');
+      console.error('[PaymentSuccess] Error checking payment:', err);
+      setError('Failed to load payment details. Please try refreshing the page.');
     } finally {
       setLoading(false);
     }
