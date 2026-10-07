@@ -4,6 +4,9 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { CheckCircle2, Loader2, ExternalLink, Ticket, ArrowRight } from 'lucide-react';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 function PaymentSuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();

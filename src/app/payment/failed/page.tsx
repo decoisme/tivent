@@ -4,6 +4,9 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { XCircle, AlertTriangle, ArrowLeft, RefreshCw } from 'lucide-react';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 function PaymentFailedContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
