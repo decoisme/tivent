@@ -265,9 +265,28 @@ function PaymentSuccessContent() {
               <p className="text-[12px] mb-3" style={{ color: 'var(--text-secondary)' }}>
                 Please check your email <span className="font-medium">{payment.buyer_email}</span> and click the verification link to complete your purchase.
               </p>
-              <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
-                Didn't receive the email? Check your spam folder or click the button below to resend.
-              </p>
+              <button
+                onClick={async () => {
+                  try {
+                    const res = await fetch('/api/payment/manual-verify', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ externalId: payment.external_id }),
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                      alert('✅ Verification email sent! Check your inbox.');
+                    } else {
+                      alert('❌ Failed to send email: ' + data.error);
+                    }
+                  } catch (err) {
+                    alert('❌ Error sending email');
+                  }
+                }}
+                className="dp-btn-secondary text-[12px] py-2"
+              >
+                Resend Verification Email
+              </button>
             </div>
           )}
 

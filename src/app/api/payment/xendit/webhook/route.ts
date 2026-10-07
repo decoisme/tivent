@@ -13,7 +13,7 @@ const supabase = createClient(
 /**
  * Mint ticket using platform wallet after successful payment
  */
-async function mintTicketWithPlatformWallet(
+export async function mintTicketWithPlatformWallet(
   eventId: number,
   ticketTypeId: number,
   buyerAddress: string
@@ -148,41 +148,94 @@ export async function POST(request: NextRequest) {
 
     // If payment is successful, send verification email
     if (status === 'PAID' && !payment.email_verified) {
-      console.log('Payment successful, sending verification email to:', payment.buyer_email);
+      console.log('Payment successful for:', payment.buyer_email);
 
-      // Send verification email
-      try {
-        const baseUrl = request.headers.get('origin') || 
-                        `${request.headers.get('x-forwarded-proto') || 'https'}://${request.headers.get('host')}`;
-        
-        const sendResponse = await fetch(`${baseUrl}/api/payment/xendit/send-verification`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ externalId }),
-        });
+      // Check if we should skip email verification (for testing)
+      const skipEmailVerification = process.env.SKIP_EMAIL_VERIFICATION === 'true';
 
-        const sendResult = await sendResponse.json();
+      if (skipEmailVerification) {
+        console.log('[webhook] Email verification skipped (SKIP_EMAIL_VERIFICATION=true)');
         
-        if (sendResult.success) {
-          console.log('[webhook] Verification email sent');
+        // Auto-verify email
+        await supabase
+          .from('payments')
+          .update({
+            email_verified: true,
+            verified_at: new Date().toISOString(),
+            status: 'VERIFIED',
+          })
+          .eq('external_id', externalId);
           
-          // Update status to PAID_PENDING_VERIFICATION
+        // Continue to minting below
+      } else {
+        console.log('[webhook] Sending verification email to:', payment.buyer_email);
+
+        // Send verification email
+        try {
+          const baseUrl = request.headers.get('origin') || 
+                          `${request.headers.get('x-forwarded-proto') || 'https'}://${request.headers.get('host')}`;
+          
+          const sendResponse = await fetch(`${baseUrl}/api/payment/xendit/send-verification`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ externalId }),
+          });
+
+          const sendResult = await sendResponse.json();
+          
+          if (sendResult.success) {
+            console.log('[webhook] Verification email sent');
+            
+            // Update status to PAID_PENDING_VERIFICATION
+            await supabase
+              .from('payments')
+              .update({
+                status: 'PAID_PENDING_VERIFICATION',
+              })
+              .eq('external_id', externalId);
+              
+            // Exit early - wait for email verification
+            return NextResponse.json({ success: true });
+          } else {
+            console.error('[webhook] Failed to send verification email:', sendResult.error);
+            
+            // Fallback: Auto-verify if email fails
+            console.log('[webhook] Auto-verifying due to email failure');
+            await supabase
+              .from('payments')
+              .update({
+                email_verified: true,
+                verified_at: new Date().toISOString(),
+                status: 'VERIFIED',
+              })
+              .eq('external_id', externalId);
+          }
+        } catch (emailError) {
+          console.error('[webhook] Error sending verification email:', emailError);
+          
+          // Fallback: Auto-verify if email fails
+          console.log('[webhook] Auto-verifying due to email error');
           await supabase
             .from('payments')
             .update({
-              status: 'PAID_PENDING_VERIFICATION',
+              email_verified: true,
+              verified_at: new Date().toISOString(),
+              status: 'VERIFIED',
             })
             .eq('external_id', externalId);
-        } else {
-          console.error('[webhook] Failed to send verification email:', sendResult.error);
         }
-      } catch (emailError) {
-        console.error('[webhook] Error sending verification email:', emailError);
       }
     }
 
+    // Reload payment data after potential verification
+    const { data: updatedPayment } = await supabase
+      .from('payments')
+      .select('*')
+      .eq('external_id', externalId)
+      .single();
+
     // Only mint ticket if email is verified
-    if (status === 'PAID' && payment.email_verified && !payment.ticket_minted) {
+    if (status === 'PAID' && updatedPayment?.email_verified && !updatedPayment.ticket_minted) {
       console.log('Payment successful for:', externalId);
 
       // Check if buyer provided a wallet address

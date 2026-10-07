@@ -87,8 +87,56 @@ export async function POST(request: NextRequest) {
 
     console.log('[verify-email] Email verified successfully:', payment.buyer_email);
 
-    // TODO: Trigger ticket minting here
-    // If buyer_address exists, mint ticket automatically
+    // Trigger ticket minting if buyer has wallet address
+    if (updatedPayment.buyer_address) {
+      console.log('[verify-email] Triggering ticket minting for wallet:', updatedPayment.buyer_address);
+      
+      try {
+        // Import minting function
+        const { mintTicketWithPlatformWallet } = await import('../webhook/route');
+        
+        const mintResult = await mintTicketWithPlatformWallet(
+          updatedPayment.event_id,
+          updatedPayment.ticket_type_id,
+          updatedPayment.buyer_address
+        );
+
+        if (mintResult.success) {
+          // Update payment with ticket info
+          await supabase
+            .from('payments')
+            .update({
+              ticket_minted: true,
+              tx_hash: mintResult.txHash,
+              minted_at: new Date().toISOString(),
+            })
+            .eq('verification_token', token);
+
+          console.log('[verify-email] Ticket minted successfully:', mintResult.txHash);
+        } else {
+          console.error('[verify-email] Failed to mint ticket:', mintResult.error);
+          
+          // Save error for debugging
+          await supabase
+            .from('payments')
+            .update({
+              mint_error: mintResult.error,
+            })
+            .eq('verification_token', token);
+        }
+      } catch (mintError: any) {
+        console.error('[verify-email] Mint error:', mintError);
+        
+        await supabase
+          .from('payments')
+          .update({
+            mint_error: mintError.message,
+          })
+          .eq('verification_token', token);
+      }
+    } else {
+      console.log('[verify-email] No wallet address provided, ticket will be claimed manually');
+    }
 
     return NextResponse.json({
       success: true,
