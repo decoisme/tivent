@@ -1,330 +1,178 @@
-# Tivent Supabase Database
+# Supabase Database Setup
 
-This directory contains the database schema and migrations for the Tivent platform.
+This directory contains database migrations for Tivent's payment tracking system.
 
-## Important: Blockchain is Source of Truth
+## Setup Instructions
 
-**The Supabase database serves as an INDEX and CACHE only.**
+### Option 1: Using Supabase Dashboard (Recommended for Beginners)
 
-- ✅ Use for: Fast searches, filtering, analytics, UI display
-- ❌ Never trust for: Ticket ownership, redemption status, payment verification
-- ⚠️ Always verify: Critical data against blockchain before taking action
+1. **Login to Supabase Dashboard**
+   - Go to https://supabase.com/dashboard
+   - Select your project: `lpnetzsaxtxmviromnww`
 
-## Database Architecture
+2. **Run the Migration**
+   - Click on "SQL Editor" in the left sidebar
+   - Click "New Query"
+   - Copy the contents of `migrations/001_create_payments_table.sql`
+   - Paste into the SQL editor
+   - Click "Run" button
 
-### Tables
+3. **Verify Table Creation**
+   - Go to "Table Editor" in the left sidebar
+   - You should see a new table called `payments`
+   - Check that all columns are created correctly
 
-#### Core Tables
-- **profiles** - User wallet addresses and roles
-- **events** - Event metadata and cached blockchain state
-- **ticket_metadata** - Ticket details and cached ownership
-- **blockchain_transactions** - Complete transaction history
-
-#### Marketplace
-- **resale_listings** - Active and historical resale listings
-
-#### Security & Operations
-- **fraud_flags** - Risk scoring and suspicious activity
-- **gate_devices** - Authorized scanning devices
-- **scan_logs** - Complete scan history for analytics
-
-### Views
-
-- **event_analytics** - Pre-computed event statistics
-- **wallet_activity** - User activity summaries
-
-## Setup
-
-### 1. Create Supabase Project
-
-1. Go to [supabase.com](https://supabase.com)
-2. Create a new project
-3. Save your project URL and anon key
-
-### 2. Run Schema
+### Option 2: Using Supabase CLI
 
 ```bash
-# Using Supabase CLI
+# Install Supabase CLI (if not already installed)
+npm install -g supabase
+
+# Login to Supabase
+supabase login
+
+# Link to your project
+supabase link --project-ref lpnetzsaxtxmviromnww
+
+# Run migrations
 supabase db push
 
-# Or manually via SQL Editor in Supabase dashboard
-# Copy and paste contents of schema.sql
+# Or run specific migration
+psql $DATABASE_URL -f supabase/migrations/001_create_payments_table.sql
 ```
 
-### 3. Configure Environment
+## Database Schema
 
-Add to `.env.local`:
+### `payments` Table
 
-```env
-NEXT_PUBLIC_SUPABASE_URL=your_project_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
-```
+Tracks fiat payment transactions via Xendit and their NFT ticket minting status.
 
-## Row Level Security (RLS)
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | UUID | Primary key |
+| `external_id` | TEXT | Unique payment reference (format: TIVENT-{eventId}-{timestamp}-{random}) |
+| `invoice_id` | TEXT | Xendit invoice ID |
+| `invoice_url` | TEXT | Xendit payment URL |
+| `event_id` | INTEGER | Event ID from smart contract |
+| `ticket_type_id` | INTEGER | Ticket type ID |
+| `ticket_quantity` | INTEGER | Number of tickets purchased |
+| `buyer_email` | TEXT | Buyer's email address |
+| `buyer_address` | TEXT | Buyer's wallet address (optional) |
+| `amount_idr` | NUMERIC | Payment amount in IDR |
+| `amount_eth` | NUMERIC | Equivalent amount in ETH/POL |
+| `paid_amount` | NUMERIC | Actual amount paid (from Xendit) |
+| `status` | TEXT | Payment status: PENDING, PAID, EXPIRED, FAILED |
+| `payment_method` | TEXT | Payment method used (e.g., QRIS, Bank Transfer) |
+| `ticket_minted` | BOOLEAN | Whether NFT ticket has been minted |
+| `tx_hash` | TEXT | Blockchain transaction hash |
+| `minted_at` | TIMESTAMP | When ticket was minted |
+| `mint_error` | TEXT | Error message if minting failed |
+| `created_at` | TIMESTAMP | Record creation time |
+| `updated_at` | TIMESTAMP | Last update time |
+| `paid_at` | TIMESTAMP | Payment confirmation time |
+| `expiry_date` | TIMESTAMP | Invoice expiry time |
 
-RLS is enabled on all tables with the following policies:
+### Indexes
 
-### Public Access
-- Events (read)
-- Ticket metadata (read)
-- Resale listings (read)
-- Blockchain transactions (read)
+- `idx_payments_external_id` - Fast lookup by external ID
+- `idx_payments_invoice_id` - Fast lookup by Xendit invoice ID
+- `idx_payments_buyer_email` - Find payments by buyer email
+- `idx_payments_buyer_address` - Find payments by wallet address
+- `idx_payments_event_id` - Find payments by event
+- `idx_payments_status` - Filter by payment status
+- `idx_payments_created_at` - Sort by creation time
 
-### Authenticated Access
-- Profiles (read own, update own)
+### Row Level Security (RLS)
 
-### Admin Only
-- Fraud flags (read/write)
+- Users can view their own payments (matched by email or wallet address)
+- Service role (API endpoints) has full access
 
-### Role-Based Access
-- Gate devices (authorized officers and organizers)
-- Scan logs (gate officers and organizers)
+## Payment Flow
 
-## Data Synchronization
+1. **User initiates payment** → `status = 'PENDING'`
+2. **Xendit webhook receives payment** → `status = 'PAID'`, `paid_at` updated
+3. **Platform wallet mints ticket** → `ticket_minted = true`, `tx_hash` set
+4. **If minting fails** → `mint_error` contains error message
 
-The database is kept in sync with the blockchain through event listeners:
+## Querying Examples
 
-1. **Blockchain Events** → Emit from smart contract
-2. **Event Listener** → Catch events in backend
-3. **Database Update** → Cache data in Supabase
-
-### Synchronization Flow
-
-```
-Smart Contract Event
-        ↓
-Backend Event Listener
-        ↓
-Validate Event Data
-        ↓
-Update Supabase Table
-        ↓
-Emit Real-time Update
-        ↓
-Frontend Updates
-```
-
-## Critical Operations
-
-### Ticket Verification Flow
-
-**WRONG** ❌
-```typescript
-// Never trust database alone
-const ticket = await supabase
-  .from('ticket_metadata')
-  .select('redeemed')
-  .eq('token_id', ticketId)
-  .single();
-
-if (!ticket.redeemed) {
-  // DANGEROUS - data might be stale
-}
-```
-
-**CORRECT** ✅
-```typescript
-// Always verify on blockchain
-const isRedeemed = await contract.tickets(tokenId).redeemed;
-const currentOwner = await contract.ownerOf(tokenId);
-
-// Then use database for UX only
-const ticket = await supabase
-  .from('ticket_metadata')
-  .select('*')
-  .eq('token_id', ticketId)
-  .single();
-```
-
-## Indexes
-
-All critical query paths are indexed:
-
-- **Wallet lookups**: Fast user ticket retrieval
-- **Event queries**: Efficient event browsing
-- **Time-based queries**: Scan logs and transaction history
-- **Status filters**: Active/redeemed/cancelled tickets
-
-## Analytics Queries
-
-### Event Performance
-
+### Find payment by external ID
 ```sql
-SELECT * FROM event_analytics
-WHERE blockchain_event_id = $1;
+SELECT * FROM payments WHERE external_id = 'TIVENT-1-1234567890-abc123';
 ```
 
-### Wallet Activity
-
+### Find all payments for an event
 ```sql
-SELECT * FROM wallet_activity
-WHERE wallet_address = $1;
+SELECT * FROM payments WHERE event_id = 1 ORDER BY created_at DESC;
 ```
 
-### Fraud Detection
+### Find pending payments
+```sql
+SELECT * FROM payments WHERE status = 'PENDING' AND expiry_date > NOW();
+```
 
+### Find failed minting attempts
+```sql
+SELECT * FROM payments 
+WHERE status = 'PAID' AND ticket_minted = FALSE AND mint_error IS NOT NULL;
+```
+
+### Get payment statistics
 ```sql
 SELECT 
-    wallet_address,
-    risk_score,
-    COUNT(*) as flag_count
-FROM fraud_flags
-WHERE status = 'ACTIVE'
-GROUP BY wallet_address, risk_score
-HAVING COUNT(*) > 2
-ORDER BY risk_score DESC;
-```
-
-### Resale Activity
-
-```sql
-SELECT 
-    e.title,
-    COUNT(rl.id) as listing_count,
-    AVG(rl.price::numeric / tm.original_price::numeric) as avg_markup
-FROM resale_listings rl
-JOIN ticket_metadata tm ON rl.token_id = tm.token_id
-JOIN events e ON tm.event_id = e.id
-WHERE rl.active = true
-GROUP BY e.id, e.title;
+  status,
+  COUNT(*) as count,
+  SUM(amount_idr) as total_idr,
+  SUM(ticket_quantity) as total_tickets
+FROM payments
+GROUP BY status;
 ```
 
 ## Maintenance
 
-### Backup Strategy
+### Retry Failed Minting
 
-- Supabase provides automatic backups
-- Critical data is always recoverable from blockchain
-- Export analytics data periodically for reporting
+If automatic ticket minting fails, you can manually retry:
 
-### Data Cleanup
-
+1. Find failed payments:
 ```sql
--- Archive old scan logs (keep 90 days)
-DELETE FROM scan_logs 
-WHERE scanned_at < NOW() - INTERVAL '90 days';
-
--- Archive resolved fraud flags (keep 1 year)
-DELETE FROM fraud_flags 
-WHERE status = 'RESOLVED' 
-AND resolved_at < NOW() - INTERVAL '1 year';
+SELECT id, external_id, buyer_address, event_id, ticket_type_id 
+FROM payments 
+WHERE status = 'PAID' AND ticket_minted = FALSE;
 ```
 
-### Reindexing
-
-If queries become slow:
-
+2. Use the platform wallet script to manually mint tickets
+3. Update the payment record:
 ```sql
-REINDEX TABLE ticket_metadata;
-REINDEX TABLE blockchain_transactions;
+UPDATE payments 
+SET 
+  ticket_minted = TRUE, 
+  tx_hash = 'your_transaction_hash',
+  minted_at = NOW(),
+  mint_error = NULL
+WHERE external_id = 'TIVENT-xxx';
 ```
 
-## Monitoring
-
-### Health Checks
+### Clean Up Expired Payments
 
 ```sql
--- Check sync lag (should be < 1 minute)
-SELECT 
-    MAX(created_at) as last_transaction,
-    NOW() - MAX(created_at) as lag
-FROM blockchain_transactions;
-
--- Check for missing data
-SELECT 
-    COUNT(*) as events_without_tickets
-FROM events e
-LEFT JOIN ticket_metadata tm ON e.id = tm.event_id
-WHERE e.tickets_sold > 0 AND tm.id IS NULL;
-```
-
-### Performance Metrics
-
-```sql
--- Slow queries
-SELECT 
-    query,
-    calls,
-    total_time / calls as avg_time
-FROM pg_stat_statements
-ORDER BY avg_time DESC
-LIMIT 10;
-```
-
-## Real-time Subscriptions
-
-Enable real-time updates for:
-
-- New ticket purchases
-- Resale listing changes
-- Scan events (for organizer dashboards)
-
-```typescript
-// Subscribe to ticket purchases for an event
-const subscription = supabase
-  .channel('ticket-purchases')
-  .on('postgres_changes', {
-    event: 'INSERT',
-    schema: 'public',
-    table: 'ticket_metadata',
-    filter: `blockchain_event_id=eq.${eventId}`
-  }, (payload) => {
-    console.log('New ticket purchased!', payload);
-  })
-  .subscribe();
+-- Mark expired invoices
+UPDATE payments
+SET status = 'EXPIRED'
+WHERE status = 'PENDING' AND expiry_date < NOW();
 ```
 
 ## Troubleshooting
 
-### Data Inconsistency
+### Migration fails
+- Check that you have the correct permissions
+- Ensure the table doesn't already exist
+- Check Supabase logs for detailed error messages
 
-If database is out of sync with blockchain:
+### RLS policies not working
+- Ensure RLS is enabled: `ALTER TABLE payments ENABLE ROW LEVEL SECURITY;`
+- Check that JWT claims are being passed correctly from your API
 
-1. Check event listener is running
-2. Verify RPC connection
-3. Re-sync from blockchain:
-
-```typescript
-// Rebuild ticket_metadata from blockchain
-const tokenCount = await contract.ticketCount();
-for (let i = 1; i <= tokenCount; i++) {
-  const ticket = await contract.tickets(i);
-  const owner = await contract.ownerOf(i);
-  // Update database...
-}
-```
-
-### Performance Issues
-
-1. Check query execution plans: `EXPLAIN ANALYZE SELECT ...`
-2. Verify indexes are being used
-3. Consider materialized views for heavy analytics
-4. Enable connection pooling
-
-## Security Checklist
-
-- ✅ RLS enabled on all tables
-- ✅ API keys properly scoped
-- ✅ Sensitive data never exposed
-- ✅ Wallet addresses validated
-- ✅ No direct writes from frontend to critical tables
-- ✅ Admin functions protected
-- ✅ Rate limiting on queries
-
-## Migration Strategy
-
-For schema changes:
-
-1. Create migration file: `migrations/YYYYMMDD_description.sql`
-2. Test on staging database
-3. Apply to production during low-traffic period
-4. Verify data integrity
-5. Update application code
-
-## Support
-
-For database issues:
-- Check Supabase status page
-- Review query logs
-- Contact Supabase support for infrastructure issues
-- Rebuild from blockchain if data is corrupted
+### Cannot query from API
+- Verify `NEXT_PUBLIC_SUPABASE_ANON_KEY` in `.env.local`
+- Check that API endpoints use service role key for write operations

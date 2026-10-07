@@ -34,7 +34,7 @@ export async function createXenditInvoice(params: {
   if (!xenditClient) {
     return {
       success: false,
-      error: 'Xendit payment gateway is not configured. Please use cryptocurrency payment.',
+      error: 'Xendit payment gateway is not configured. Please configure XENDIT_SECRET_KEY in .env.local',
     };
   }
 

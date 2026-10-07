@@ -12,6 +12,7 @@ import { FraudWarning, RiskIndicator } from '@/components/RiskBadge';
 import { formatIDR } from '@/lib/currency';
 import { useLivePrice } from '@/hooks/useLivePrice';
 import TicketSuccessModal from '@/components/TicketSuccessModal';
+import PaymentMethodSelector from '@/components/PaymentMethodSelector';
 import {
   ArrowLeft,
   CreditCard,
@@ -263,21 +264,32 @@ export default function PurchaseTicketPage() {
   };
 
   const handleFiatPayment = async () => {
-    if (!event || !polRate || !selectedType) return;
+    if (!event || !selectedType) return;
     try {
       setProcessingPayment(true);
       const pricePOL = parseFloat(selectedType.pricePOL);
-      const priceIDR = selectedType.priceIDR > 0 ? selectedType.priceIDR : Math.round(pricePOL * polRate);
-      const totalIDR = priceIDR * quantity;
+      const priceIDR = selectedType.priceIDR > 0 ? selectedType.priceIDR : Math.round(pricePOL * (polRate || 5000));
 
-      const response = await fetch('/api/xendit/create-invoice', {
+      const response = await fetch('/api/payment/xendit/create-invoice', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ eventId, ticketQuantity: quantity, pricePerTicket: priceIDR, payerEmail: email, walletAddress: address || null }),
+        body: JSON.stringify({
+          eventId,
+          ticketTypeId: selectedType.typeId,
+          ticketQuantity: quantity,
+          buyerEmail: email,
+          buyerAddress: address || null,
+          pricePerTicket: pricePOL,
+        }),
       });
 
       const data = await response.json();
-      if (!data.success) throw new Error(data.error || 'Failed to create payment');
+      
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to create payment invoice');
+      }
+
+      // Redirect to Xendit payment page
       window.location.href = data.invoiceUrl;
     } catch (err: any) {
       setPurchaseError(err.message || 'Failed to initiate payment');
@@ -540,60 +552,14 @@ export default function PurchaseTicketPage() {
           <div className="lg:col-span-1">
             <div className="dp-surface p-6 sticky top-[72px] space-y-5">
               {/* Payment method */}
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.04em] mb-3" style={{ color: 'var(--text-muted)' }}>Payment</p>
-                <div className="space-y-2">
-                  {/* Fiat payment temporarily disabled */}
-                  {/* <button
-                    onClick={() => setPaymentMethod('fiat')}
-                    className="w-full p-3 rounded-lg text-left flex items-center gap-3 transition-colors"
-                    style={{
-                      backgroundColor: paymentMethod === 'fiat' ? 'var(--accent-muted)' : 'var(--surface-elevated)',
-                      border: `1px solid ${paymentMethod === 'fiat' ? 'var(--accent)' : 'var(--border)'}`,
-                    }}
-                  >
-                    <CreditCard size={16} style={{ color: paymentMethod === 'fiat' ? 'var(--accent)' : 'var(--text-muted)' }} />
-                    <div>
-                      <p className="text-[13px] font-medium">Rupiah (IDR)</p>
-                      <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>QRIS, Bank Transfer, E-Wallet</p>
-                    </div>
-                  </button> */}
-                  <button
-                    onClick={() => setPaymentMethod('crypto')}
-                    className="w-full p-3 rounded-lg text-left flex items-center gap-3 transition-colors"
-                    style={{
-                      backgroundColor: 'var(--accent-muted)',
-                      border: '1px solid var(--accent)',
-                    }}
-                  >
-                    <Wallet size={16} style={{ color: 'var(--accent)' }} />
-                    <div>
-                      <p className="text-[13px] font-medium">Cryptocurrency</p>
-                      <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>MetaMask, WalletConnect - Pay with POL</p>
-                    </div>
-                  </button>
-                </div>
-
-                {/* {paymentMethod === 'fiat' && (
-                  <div className="mt-3">
-                    <label className="block text-[11px] font-medium mb-1.5" style={{ color: 'var(--text-muted)' }}>Email</label>
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="your@email.com"
-                      className="dp-input"
-                    />
-                    <p className="text-[11px] mt-1" style={{ color: 'var(--text-muted)' }}>For payment confirmation and ticket delivery.</p>
-                  </div>
-                )} */}
-
-                {paymentMethod === 'crypto' && !isConnected && (
-                  <div className="mt-3 p-3 rounded-lg" style={{ backgroundColor: 'var(--warning-muted)', border: '1px solid rgba(196,153,59,0.2)' }}>
-                    <p className="text-[12px]" style={{ color: 'var(--warning)' }}>Connect wallet to continue.</p>
-                  </div>
-                )}
-              </div>
+              <PaymentMethodSelector
+                selectedMethod={paymentMethod}
+                onMethodChange={setPaymentMethod}
+                email={email}
+                onEmailChange={setEmail}
+                isConnected={isConnected}
+                disabled={!canPurchase}
+              />
 
               <hr className="dp-divider" />
 

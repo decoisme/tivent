@@ -9,7 +9,9 @@
     "start": "next start",
     "lint": "next lint",
     "listener": "node scripts/event-listener.js",
-    "sync": "node -e \"fetch('http://localhost:3000/api/sync?from=0&to=1000').then(r=>r.json()).then(console.log)\""
+    "sync": "node -e \"fetch('http://localhost:3000/api/sync?from=0&to=1000').then(r=>r.json()).then(console.log)\"",
+    "generate-wallet": "node scripts/generate-platform-wallet.js",
+    "test:platform-wallet": "node scripts/test-platform-wallet.js"
   },
   "keywords": [
     "blockchain",

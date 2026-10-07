@@ -43,3 +43,6 @@ typechain-types/
 
 # contracts
 contracts/node_modules/
+
+# Platform wallet backups
+.wallet-backup/
