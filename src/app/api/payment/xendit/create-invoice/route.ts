@@ -24,29 +24,34 @@ export async function POST(request: NextRequest) {
       pricePerTicket,
     } = body;
 
+    console.log('[create-invoice] Request:', { eventId, ticketTypeId, ticketQuantity, buyerEmail, hasAddress: !!buyerAddress });
+
     // Validation
     if (!eventId || ticketTypeId === undefined || !ticketQuantity || !buyerEmail || !pricePerTicket) {
+      console.error('[create-invoice] Missing fields');
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Missing required fields', success: false },
         { status: 400 }
       );
     }
 
     if (ticketQuantity < 1 || ticketQuantity > 10) {
+      console.error('[create-invoice] Invalid quantity:', ticketQuantity);
       return NextResponse.json(
-        { error: 'Ticket quantity must be between 1 and 10' },
+        { error: 'Ticket quantity must be between 1 and 10', success: false },
         { status: 400 }
       );
     }
 
     // Calculate amounts
     const totalPriceETH = pricePerTicket * ticketQuantity;
-    // Convert ETH to IDR (mock rate: 1 ETH = 50,000,000 IDR)
     const ETH_IDR_RATE = 50000000;
     const totalPriceIDR = Math.round(totalPriceETH * ETH_IDR_RATE);
 
     // Generate unique external ID
     const externalId = `TIVENT-${eventId}-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+
+    console.log('[create-invoice] Creating invoice:', { externalId, totalPriceIDR });
 
     // Create Xendit invoice
     const invoiceResult = await createXenditInvoice({
@@ -60,37 +65,43 @@ export async function POST(request: NextRequest) {
       failureRedirectUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/payment/failed?externalId=${externalId}`,
     });
 
+    console.log('[create-invoice] Invoice result:', { success: invoiceResult.success });
+
     if (!invoiceResult.success) {
+      console.error('[create-invoice] Xendit failed:', invoiceResult.error);
       return NextResponse.json(
-        { error: invoiceResult.error },
+        { error: invoiceResult.error || 'Xendit payment gateway not configured', success: false },
         { status: 500 }
       );
     }
 
     // Save payment record to database
-    const { data: paymentRecord, error: dbError } = await supabase
-      .from('payments')
-      .insert({
-        external_id: externalId,
-        invoice_id: invoiceResult.invoiceId,
-        event_id: eventId,
-        ticket_type_id: ticketTypeId,
-        ticket_quantity: ticketQuantity,
-        buyer_email: buyerEmail,
-        buyer_address: buyerAddress,
-        amount_idr: totalPriceIDR,
-        amount_eth: totalPriceETH,
-        status: 'PENDING',
-        invoice_url: invoiceResult.invoiceUrl,
-        expiry_date: invoiceResult.expiryDate,
-      })
-      .select()
-      .single();
+    try {
+      const { error: dbError } = await supabase
+        .from('payments')
+        .insert({
+          external_id: externalId,
+          invoice_id: invoiceResult.invoiceId,
+          event_id: eventId,
+          ticket_type_id: ticketTypeId,
+          ticket_quantity: ticketQuantity,
+          buyer_email: buyerEmail,
+          buyer_address: buyerAddress || null,
+          amount_idr: totalPriceIDR,
+          amount_eth: totalPriceETH,
+          status: 'PENDING',
+          invoice_url: invoiceResult.invoiceUrl,
+          expiry_date: invoiceResult.expiryDate,
+        });
 
-    if (dbError) {
-      console.error('Database error:', dbError);
-      // Don't fail the request if DB fails, invoice is already created
+      if (dbError) {
+        console.error('[create-invoice] DB error (non-blocking):', dbError.message);
+      }
+    } catch (dbErr) {
+      console.error('[create-invoice] DB exception (non-blocking):', dbErr);
     }
+
+    console.log('[create-invoice] Success!');
 
     return NextResponse.json({
       success: true,
@@ -102,9 +113,13 @@ export async function POST(request: NextRequest) {
       expiryDate: invoiceResult.expiryDate,
     });
   } catch (error: any) {
-    console.error('Create invoice error:', error);
+    console.error('[create-invoice] Error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to create invoice' },
+      { 
+        error: error.message || 'Failed to create invoice', 
+        success: false,
+        details: error.stack 
+      },
       { status: 500 }
     );
   }

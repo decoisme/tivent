@@ -46,3 +46,6 @@ contracts/node_modules/
 
 # Platform wallet backups
 .wallet-backup/
+
+.vercel
+.env*.local
