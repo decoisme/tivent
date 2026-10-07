@@ -51,7 +51,12 @@ export async function POST(request: NextRequest) {
     // Generate unique external ID
     const externalId = `TIVENT-${eventId}-${Date.now()}-${Math.random().toString(36).substring(7)}`;
 
-    console.log('[create-invoice] Creating invoice:', { externalId, totalPriceIDR });
+    // Detect base URL (use request host for correct redirect)
+    const host = request.headers.get('host') || 'localhost:3000';
+    const protocol = host.includes('localhost') ? 'http' : 'https';
+    const baseUrl = `${protocol}://${host}`;
+
+    console.log('[create-invoice] Creating invoice:', { externalId, totalPriceIDR, baseUrl });
 
     // Create Xendit invoice
     const invoiceResult = await createXenditInvoice({
@@ -61,8 +66,8 @@ export async function POST(request: NextRequest) {
       description: `Tivent Event #${eventId} - ${ticketQuantity} Ticket(s)`,
       eventId,
       ticketQuantity,
-      successRedirectUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/payment/success?externalId=${externalId}`,
-      failureRedirectUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/payment/failed?externalId=${externalId}`,
+      successRedirectUrl: `${baseUrl}/payment/success?externalId=${externalId}`,
+      failureRedirectUrl: `${baseUrl}/payment/failed?externalId=${externalId}`,
     });
 
     console.log('[create-invoice] Invoice result:', { success: invoiceResult.success });
