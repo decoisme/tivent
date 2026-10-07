@@ -21,6 +21,19 @@ export async function sendVerificationEmail({
   ticketQuantity = 1,
   amount,
 }: SendVerificationEmailParams) {
+  // Validate API key
+  if (!process.env.RESEND_API_KEY) {
+    console.error('[email] RESEND_API_KEY not configured!');
+    return { 
+      success: false, 
+      error: 'Email service not configured. Please set RESEND_API_KEY environment variable.' 
+    };
+  }
+
+  console.log('[email] Sending verification email...');
+  console.log('[email] To:', to);
+  console.log('[email] API Key configured:', process.env.RESEND_API_KEY.substring(0, 10) + '...');
+
   try {
     const { data, error } = await resend.emails.send({
       from: 'Tivent <onboarding@resend.dev>', // Change to your domain later
@@ -36,14 +49,15 @@ export async function sendVerificationEmail({
 
     if (error) {
       console.error('[email] Resend error:', error);
-      return { success: false, error: error.message };
+      return { success: false, error: error.message || JSON.stringify(error) };
     }
 
-    console.log('[email] Verification email sent:', data?.id);
+    console.log('[email] Verification email sent successfully!');
+    console.log('[email] Message ID:', data?.id);
     return { success: true, messageId: data?.id };
   } catch (error: any) {
     console.error('[email] Send error:', error);
-    return { success: false, error: error.message };
+    return { success: false, error: error.message || 'Unknown error' };
   }
 }
 
