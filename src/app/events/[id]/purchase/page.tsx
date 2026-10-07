@@ -268,7 +268,9 @@ export default function PurchaseTicketPage() {
     try {
       setProcessingPayment(true);
       const pricePOL = parseFloat(selectedType.pricePOL);
-      const priceIDR = selectedType.priceIDR > 0 ? selectedType.priceIDR : Math.round(pricePOL * (polRate || 5000));
+      
+      // Use flat IDR price from event metadata
+      const priceIDR = selectedType.priceIDR;
 
       const response = await fetch('/api/payment/xendit/create-invoice', {
         method: 'POST',
@@ -279,7 +281,8 @@ export default function PurchaseTicketPage() {
           ticketQuantity: quantity,
           buyerEmail: email,
           buyerAddress: address || null,
-          pricePerTicket: pricePOL,
+          pricePerTicket: pricePOL, // For reference
+          priceIDR: priceIDR, // Flat IDR price from event creation
         }),
       });
 

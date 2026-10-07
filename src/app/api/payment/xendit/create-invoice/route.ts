@@ -21,13 +21,14 @@ export async function POST(request: NextRequest) {
       ticketQuantity,
       buyerEmail,
       buyerAddress,
-      pricePerTicket, // Price in POL
+      pricePerTicket, // Price in POL (for reference)
+      priceIDR, // Flat IDR price from event metadata
     } = body;
 
-    console.log('[create-invoice] Request:', { eventId, ticketTypeId, ticketQuantity, buyerEmail, hasAddress: !!buyerAddress });
+    console.log('[create-invoice] Request:', { eventId, ticketTypeId, ticketQuantity, buyerEmail, priceIDR, hasAddress: !!buyerAddress });
 
     // Validation
-    if (!eventId || ticketTypeId === undefined || !ticketQuantity || !buyerEmail || !pricePerTicket) {
+    if (!eventId || ticketTypeId === undefined || !ticketQuantity || !buyerEmail || !priceIDR) {
       console.error('[create-invoice] Missing fields');
       return NextResponse.json(
         { error: 'Missing required fields', success: false },
@@ -43,12 +44,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Calculate amounts
-    const totalPricePOL = pricePerTicket * ticketQuantity;
-    // Convert POL to IDR (1 POL ≈ Rp 5,000 - real rate as of 2026)
-    // Note: Price from contract is in POL, not ETH!
-    const POL_IDR_RATE = 5000; // 1 POL = Rp 5,000
-    const totalPriceIDR = Math.round(totalPricePOL * POL_IDR_RATE);
+    // Use flat IDR price directly from event metadata
+    const totalPriceIDR = Math.round(priceIDR * ticketQuantity);
+    const totalPricePOL = pricePerTicket * ticketQuantity; // For reference only
 
     // Generate unique external ID
     const externalId = `TIVENT-${eventId}-${Date.now()}-${Math.random().toString(36).substring(7)}`;
