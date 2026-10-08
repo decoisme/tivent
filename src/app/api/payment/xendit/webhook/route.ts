@@ -97,10 +97,15 @@ export async function mintTicketWithPlatformWallet(
 
     // Step 2: Transfer ticket from platform wallet to buyer
     console.log('[mintTicket] Step 2: Transferring ticket to buyer...');
+    
+    // Normalize buyer address checksum
+    const buyerAddressChecksummed = ethers.getAddress(buyerAddress);
+    console.log('[mintTicket] Normalized buyer address:', buyerAddressChecksummed);
+    
     const transferTx = await contract.transferFrom(
-      wallet.address, // from: platform wallet
-      buyerAddress,   // to: buyer
-      tokenId,        // tokenId
+      wallet.address,           // from: platform wallet
+      buyerAddressChecksummed,  // to: buyer (checksummed)
+      tokenId,                  // tokenId
       {
         gasLimit: 200000,
       }
@@ -112,11 +117,12 @@ export async function mintTicketWithPlatformWallet(
 
     // Verify ownership
     const owner = await contract.ownerOf(tokenId);
+    const buyerAddressChecksummed = ethers.getAddress(buyerAddress);
     console.log('[mintTicket] Ticket owner after transfer:', owner);
-    console.log('[mintTicket] Expected owner (buyer):', buyerAddress);
+    console.log('[mintTicket] Expected owner (buyer):', buyerAddressChecksummed);
 
-    if (owner.toLowerCase() !== buyerAddress.toLowerCase()) {
-      throw new Error(`Transfer verification failed: owner is ${owner}, expected ${buyerAddress}`);
+    if (owner.toLowerCase() !== buyerAddressChecksummed.toLowerCase()) {
+      throw new Error(`Transfer verification failed: owner is ${owner}, expected ${buyerAddressChecksummed}`);
     }
 
     console.log('[mintTicket] ✅ Ticket successfully minted and transferred!');
