@@ -138,6 +138,18 @@ export const EVENT_TICKETING_ABI = [
     outputs: [{ type: 'uint256' }],
   },
   {
+    name: 'mintTicketFree',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'eventId', type: 'uint256' },
+      { name: 'ticketTypeId', type: 'uint256' },
+      { name: 'recipient', type: 'address' },
+      { name: 'ticketMetadataURI', type: 'string' }
+    ],
+    outputs: [{ type: 'uint256' }],
+  },
+  {
     name: 'transferFrom',
     type: 'function',
     stateMutability: 'nonpayable',

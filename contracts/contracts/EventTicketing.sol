@@ -345,6 +345,61 @@ contract EventTicketing is ERC721, ERC721URIStorage, Ownable, ReentrancyGuard, P
         return tokenId;
     }
     
+    /**
+     * @dev Mint ticket for free (for fiat payment integration)
+     * @notice Only pays gas fees, no ticket price required
+     * @param eventId ID of the event
+     * @param ticketTypeId Type of ticket to mint
+     * @param recipient Address to receive the ticket
+     * @param ticketMetadataURI IPFS URI for ticket-specific metadata
+     * @dev Used when user has already paid via fiat gateway (e.g., Xendit)
+     */
+    function mintTicketFree(
+        uint256 eventId,
+        uint256 ticketTypeId,
+        address recipient,
+        string memory ticketMetadataURI
+    ) external whenNotPaused eventExists(eventId) nonReentrant returns (uint256) {
+        EventData storage eventData = events[eventId];
+        TicketType storage ticketType = ticketTypes[eventId][ticketTypeId];
+        
+        require(!eventData.cancelled, "Event cancelled");
+        require(ticketTypeId < eventData.ticketTypesCount, "Invalid ticket type");
+        require(ticketType.active, "Ticket type not active");
+        require(ticketType.sold < ticketType.maxSupply, "Ticket type sold out");
+        require(recipient != address(0), "Invalid recipient address");
+        
+        // No payment required - for fiat integration
+        // No wallet limit check - managed off-chain by platform
+        
+        uint256 tokenId = _nextTokenId++;
+        
+        // Mint NFT to recipient
+        _safeMint(recipient, tokenId);
+        _setTokenURI(tokenId, ticketMetadataURI);
+        
+        // Store ticket data with original price from ticket type (for reference)
+        tickets[tokenId] = TicketData({
+            eventId: eventId,
+            ticketTypeId: ticketTypeId,
+            originalPrice: ticketType.price,
+            resaleCount: 0,
+            maxResaleCount: 3,
+            redeemed: false,
+            active: true
+        });
+        
+        // Update counters
+        ticketType.sold++;
+        eventData.ticketsSold++;
+        
+        // Note: No payment transfer - fiat payment already processed off-chain
+        
+        emit TicketMinted(tokenId, eventId, recipient, 0); // Price = 0 for free mint
+        
+        return tokenId;
+    }
+    
     // ==================== Getter Functions ====================
     
     /**

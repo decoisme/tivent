@@ -11,11 +11,12 @@ const supabase = createClient(
 );
 
 /**
- * Mint ticket using platform wallet after successful payment
+ * Mint ticket using platform wallet after successful fiat payment
  * 
- * Process:
- * 1. Platform wallet calls buyTicket() - ticket minted to platform wallet
- * 2. Platform wallet transfers ticket to buyer's address
+ * Process (FREE MINTING):
+ * 1. Platform wallet calls mintTicketFree() - ticket minted directly to buyer
+ * 2. No payment required - user already paid via fiat (Xendit)
+ * 3. Platform only pays gas fees (~0.002 POL)
  */
 export async function mintTicketWithPlatformWallet(
   eventId: number,
@@ -23,7 +24,7 @@ export async function mintTicketWithPlatformWallet(
   buyerAddress: string
 ): Promise<{ success: boolean; txHash?: string; tokenId?: string; error?: string }> {
   try {
-    console.log('[mintTicket] Starting mint process...');
+    console.log('[mintTicket] Starting FREE mint process...');
     console.log('[mintTicket] Event ID:', eventId);
     console.log('[mintTicket] Ticket Type:', ticketTypeId);
     console.log('[mintTicket] Buyer Address:', buyerAddress);
@@ -40,12 +41,18 @@ export async function mintTicketWithPlatformWallet(
     
     console.log('[mintTicket] Platform wallet:', wallet.address);
 
-    // Check balance
+    // Check balance (only need gas, not ticket price!)
     const balance = await provider.getBalance(wallet.address);
     console.log('[mintTicket] Platform wallet balance:', ethers.formatEther(balance), 'POL');
 
     if (balance === 0n) {
       throw new Error('Platform wallet has no POL for gas fees');
+    }
+
+    // Minimum balance check: need at least 0.01 POL for gas
+    const minBalance = ethers.parseEther('0.01');
+    if (balance < minBalance) {
+      console.warn('[mintTicket] ⚠️ Low balance warning: only', ethers.formatEther(balance), 'POL');
     }
 
     // Initialize contract
@@ -54,31 +61,38 @@ export async function mintTicketWithPlatformWallet(
     // Generate ticket metadata URI
     const ticketMetadataURI = `ipfs://ticket-${eventId}-${Date.now()}`;
 
-    // Get ticket price from contract
-    const ticketType = await contract.getTicketType(eventId, ticketTypeId);
-    const ticketPrice = ticketType.price;
+    // Normalize buyer address checksum
+    const buyerAddressChecksummed = ethers.getAddress(buyerAddress);
+    console.log('[mintTicket] Normalized buyer address:', buyerAddressChecksummed);
 
-    console.log('[mintTicket] Ticket price:', ethers.formatEther(ticketPrice), 'POL');
-
-    // Step 1: Buy ticket (mints to platform wallet)
-    console.log('[mintTicket] Step 1: Buying ticket (minting to platform wallet)...');
-    const buyTx = await contract.buyTicket(
+    // Call mintTicketFree (no payment required!)
+    console.log('[mintTicket] Calling mintTicketFree (free minting, gas only)...');
+    const mintTx = await contract.mintTicketFree(
       eventId,
       ticketTypeId,
+      buyerAddressChecksummed, // mint directly to buyer
       ticketMetadataURI,
       {
-        value: ticketPrice,
-        gasLimit: 500000,
+        gasLimit: 300000, // Only pay for gas
+        // NO value field - no payment!
       }
     );
 
-    console.log('[mintTicket] Buy transaction sent:', buyTx.hash);
-    const buyReceipt = await buyTx.wait();
-    console.log('[mintTicket] Buy transaction confirmed in block:', buyReceipt.blockNumber);
+    console.log('[mintTicket] Mint transaction sent:', mintTx.hash);
+    const mintReceipt = await mintTx.wait();
+    console.log('[mintTicket] Mint transaction confirmed in block:', mintReceipt.blockNumber);
+
+    // Calculate gas cost
+    const gasUsed = mintReceipt.gasUsed;
+    const gasPrice = mintTx.gasPrice || 0n;
+    const gasCost = gasUsed * gasPrice;
+    const gasCostPOL = ethers.formatEther(gasCost);
+    console.log('[mintTicket] ⛽ Gas used:', gasUsed.toString());
+    console.log('[mintTicket] 💸 Gas cost:', gasCostPOL, 'POL (~$' + (parseFloat(gasCostPOL) * 0.5).toFixed(4) + ' USD)');
 
     // Extract tokenId from event logs
     let tokenId: string | null = null;
-    for (const log of buyReceipt.logs) {
+    for (const log of mintReceipt.logs) {
       try {
         const parsed = contract.interface.parseLog(log);
         if (parsed?.name === 'TicketMinted') {
@@ -95,42 +109,23 @@ export async function mintTicketWithPlatformWallet(
       throw new Error('Failed to extract tokenId from transaction logs');
     }
 
-    // Step 2: Transfer ticket from platform wallet to buyer
-    console.log('[mintTicket] Step 2: Transferring ticket to buyer...');
-    
-    // Normalize buyer address checksum
-    const buyerAddressChecksummed = ethers.getAddress(buyerAddress);
-    console.log('[mintTicket] Normalized buyer address:', buyerAddressChecksummed);
-    
-    const transferTx = await contract.transferFrom(
-      wallet.address,           // from: platform wallet
-      buyerAddressChecksummed,  // to: buyer (checksummed)
-      tokenId,                  // tokenId
-      {
-        gasLimit: 200000,
-      }
-    );
-
-    console.log('[mintTicket] Transfer transaction sent:', transferTx.hash);
-    const transferReceipt = await transferTx.wait();
-    console.log('[mintTicket] Transfer confirmed in block:', transferReceipt.blockNumber);
-
     // Verify ownership
     const owner = await contract.ownerOf(tokenId);
-    console.log('[mintTicket] Ticket owner after transfer:', owner);
-    console.log('[mintTicket] Expected owner (buyer):', buyerAddressChecksummed);
+    console.log('[mintTicket] Ticket owner:', owner);
+    console.log('[mintTicket] Expected owner:', buyerAddressChecksummed);
 
     if (owner.toLowerCase() !== buyerAddressChecksummed.toLowerCase()) {
-      throw new Error(`Transfer verification failed: owner is ${owner}, expected ${buyerAddressChecksummed}`);
+      throw new Error(`Ownership verification failed: owner is ${owner}, expected ${buyerAddressChecksummed}`);
     }
 
-    console.log('[mintTicket] ✅ Ticket successfully minted and transferred!');
-    console.log('[mintTicket] Buy TX:', buyReceipt.hash);
-    console.log('[mintTicket] Transfer TX:', transferReceipt.hash);
+    console.log('[mintTicket] ✅ Ticket successfully minted (FREE)!');
+    console.log('[mintTicket] TX Hash:', mintReceipt.hash);
+    console.log('[mintTicket] Token ID:', tokenId);
+    console.log('[mintTicket] Owner:', owner);
 
     return {
       success: true,
-      txHash: transferReceipt.hash, // Return transfer tx as main tx
+      txHash: mintReceipt.hash,
       tokenId: tokenId,
     };
   } catch (error: any) {
