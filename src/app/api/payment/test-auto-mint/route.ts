@@ -45,6 +45,7 @@ export async function POST(request: NextRequest) {
         status: 'PAID', // Already marked as paid
         payment_method: 'TEST',
         verification_token: verificationToken,
+        verification_sent_at: new Date().toISOString(), // Required for token expiry check
         email_verified: false,
         ticket_minted: false,
       })
