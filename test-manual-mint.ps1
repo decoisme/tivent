@@ -2,8 +2,8 @@
 # Usage: .\test-manual-mint.ps1 "TIVENT-1-1791394621711-ofl88m"
 
 param(
-    [string]$ExternalId = "TIVENT-1-1791394621711-ofl88m",
-    [string]$BaseUrl = "https://tivent-adsmc81z5-decoismes-projects.vercel.app"
+    [string]$ExternalId = "TIVENT-2-1791428418056-504feq",
+    [string]$BaseUrl = "https://tivent-crlkmlmsm-decoismes-projects.vercel.app"
 )
 
 # Use deployment URL that's confirmed working
