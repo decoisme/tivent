@@ -89,17 +89,26 @@ export async function POST(request: NextRequest) {
 
     // Trigger ticket minting if buyer has wallet address
     if (updatedPayment.buyer_address) {
-      console.log('[verify-email] Triggering ticket minting for wallet:', updatedPayment.buyer_address);
+      console.log('[verify-email] ========================================');
+      console.log('[verify-email] TRIGGERING AUTO-MINT');
+      console.log('[verify-email] Wallet:', updatedPayment.buyer_address);
+      console.log('[verify-email] Event ID:', updatedPayment.event_id);
+      console.log('[verify-email] Ticket Type:', updatedPayment.ticket_type_id);
+      console.log('[verify-email] ========================================');
       
       try {
         // Import minting function
+        console.log('[verify-email] Importing mintTicketWithPlatformWallet...');
         const { mintTicketWithPlatformWallet } = await import('../webhook/route');
         
+        console.log('[verify-email] Calling mintTicketWithPlatformWallet...');
         const mintResult = await mintTicketWithPlatformWallet(
           updatedPayment.event_id,
           updatedPayment.ticket_type_id,
           updatedPayment.buyer_address
         );
+
+        console.log('[verify-email] Mint result:', JSON.stringify(mintResult, null, 2));
 
         if (mintResult.success) {
           // Update payment with ticket info
@@ -116,7 +125,10 @@ export async function POST(request: NextRequest) {
           console.log('[verify-email] Token ID:', mintResult.tokenId);
           console.log('[verify-email] TX Hash:', mintResult.txHash);
         } else {
-          console.error('[verify-email] Failed to mint ticket:', mintResult.error);
+          console.error('[verify-email] ========================================');
+          console.error('[verify-email] MINT FAILED!');
+          console.error('[verify-email] Error:', mintResult.error);
+          console.error('[verify-email] ========================================');
           
           // Save error for debugging
           await supabase
@@ -127,7 +139,11 @@ export async function POST(request: NextRequest) {
             .eq('verification_token', token);
         }
       } catch (mintError: any) {
-        console.error('[verify-email] Mint error:', mintError);
+        console.error('[verify-email] ========================================');
+        console.error('[verify-email] MINT EXCEPTION!');
+        console.error('[verify-email] Error:', mintError.message);
+        console.error('[verify-email] Stack:', mintError.stack);
+        console.error('[verify-email] ========================================');
         
         await supabase
           .from('payments')
@@ -137,7 +153,10 @@ export async function POST(request: NextRequest) {
           .eq('verification_token', token);
       }
     } else {
-      console.log('[verify-email] No wallet address provided, ticket will be claimed manually');
+      console.log('[verify-email] ========================================');
+      console.log('[verify-email] NO WALLET ADDRESS - SKIPPING AUTO-MINT');
+      console.log('[verify-email] Ticket will be claimed manually');
+      console.log('[verify-email] ========================================');
     }
 
     return NextResponse.json({
