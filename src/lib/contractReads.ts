@@ -105,6 +105,59 @@ export const EVENT_TICKETING_ABI = [
     inputs: [{ name: 'tokenId', type: 'uint256' }],
     outputs: [{ type: 'bool' }],
   },
+  // Write functions for minting
+  {
+    name: 'getTicketType',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [
+      { name: 'eventId', type: 'uint256' },
+      { name: 'typeId', type: 'uint256' }
+    ],
+    outputs: [{
+      type: 'tuple',
+      components: [
+        { name: 'typeId', type: 'uint256' },
+        { name: 'name', type: 'string' },
+        { name: 'price', type: 'uint256' },
+        { name: 'maxSupply', type: 'uint256' },
+        { name: 'sold', type: 'uint256' },
+        { name: 'active', type: 'bool' },
+      ]
+    }],
+  },
+  {
+    name: 'buyTicket',
+    type: 'function',
+    stateMutability: 'payable',
+    inputs: [
+      { name: 'eventId', type: 'uint256' },
+      { name: 'ticketTypeId', type: 'uint256' },
+      { name: 'ticketMetadataURI', type: 'string' }
+    ],
+    outputs: [{ type: 'uint256' }],
+  },
+  {
+    name: 'transferFrom',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'from', type: 'address' },
+      { name: 'to', type: 'address' },
+      { name: 'tokenId', type: 'uint256' }
+    ],
+    outputs: [],
+  },
+  {
+    name: 'TicketMinted',
+    type: 'event',
+    inputs: [
+      { name: 'tokenId', type: 'uint256', indexed: true },
+      { name: 'eventId', type: 'uint256', indexed: true },
+      { name: 'buyer', type: 'address', indexed: true },
+      { name: 'price', type: 'uint256' },
+    ],
+  },
   // Gate officer management
   {
     name: 'gateOfficers',

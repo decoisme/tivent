@@ -6,7 +6,8 @@ param(
     [string]$Email = "nsytpremi12@gmail.com",
     [string]$WalletAddress = "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb2",
     [int]$EventId = 1,
-    [int]$TicketTypeId = 0
+    [int]$TicketTypeId = 0,
+    [int]$PriceIDR = 50000  # Default 50k IDR per ticket
 )
 
 Write-Host "[CREATE] Creating test payment..." -ForegroundColor Cyan
@@ -15,6 +16,7 @@ Write-Host "Base URL: $BaseUrl" -ForegroundColor White
 Write-Host "Email: $Email" -ForegroundColor White
 Write-Host "Wallet: $WalletAddress" -ForegroundColor White
 Write-Host "Event ID: $EventId, Ticket Type: $TicketTypeId" -ForegroundColor White
+Write-Host "Price: IDR $PriceIDR per ticket" -ForegroundColor White
 Write-Host ""
 
 try {
@@ -24,6 +26,8 @@ try {
         ticketQuantity = 1
         buyerEmail = $Email
         buyerAddress = $WalletAddress
+        priceIDR = $PriceIDR
+        pricePerTicket = 0.001  # Reference price in POL (not used for actual payment)
     } | ConvertTo-Json
 
     Write-Host "[STEP 1] Creating Xendit invoice..." -ForegroundColor Yellow
