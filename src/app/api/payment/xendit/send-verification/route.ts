@@ -66,9 +66,24 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate verification URL
-    const baseUrl = request.headers.get('origin') || 
-                    `${request.headers.get('x-forwarded-proto') || 'https'}://${request.headers.get('host')}`;
+    // Smart base URL detection with production fallback
+    let baseUrl = request.headers.get('origin') || 
+                  `${request.headers.get('x-forwarded-proto') || 'https'}://${request.headers.get('host')}`;
+    
+    // If base URL is production domain but we're in Vercel preview deployment,
+    // use the actual deployment URL for consistency
+    const actualHost = request.headers.get('x-forwarded-host') || request.headers.get('host');
+    if (actualHost && actualHost.includes('vercel.app') && !actualHost.includes('tivent-chi')) {
+      // We're in a specific deployment, use that URL
+      baseUrl = `https://${actualHost}`;
+    }
+    
+    console.log('[send-verification] Base URL:', baseUrl);
+    console.log('[send-verification] Headers - host:', request.headers.get('host'));
+    console.log('[send-verification] Headers - x-forwarded-host:', request.headers.get('x-forwarded-host'));
+    
     const verificationUrl = `${baseUrl}/api/payment/xendit/verify-email?token=${verificationToken}`;
+    console.log('[send-verification] Verification URL:', verificationUrl);
 
     // Send verification email
     console.log('[send-verification] Sending email to:', payment.buyer_email);
