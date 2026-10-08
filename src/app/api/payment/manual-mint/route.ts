@@ -158,8 +158,13 @@ export async function POST(request: NextRequest) {
     console.log('[manual-mint] Step 2: Transferring ticket to buyer...');
     
     // Normalize buyer address checksum
-    const buyerAddressChecksummed = ethers.getAddress(payment.buyer_address);
-    console.log('[manual-mint] Normalized buyer address:', buyerAddressChecksummed);
+    let buyerAddressChecksummed: string;
+    try {
+      buyerAddressChecksummed = ethers.getAddress(payment.buyer_address);
+      console.log('[manual-mint] Normalized buyer address:', buyerAddressChecksummed);
+    } catch (e: any) {
+      throw new Error(`Invalid buyer address: ${payment.buyer_address}`);
+    }
     
     const transferTx = await contract.transferFrom(
       wallet.address,              // from: platform wallet
