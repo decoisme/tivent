@@ -117,7 +117,6 @@ export async function mintTicketWithPlatformWallet(
 
     // Verify ownership
     const owner = await contract.ownerOf(tokenId);
-    const buyerAddressChecksummed = ethers.getAddress(buyerAddress);
     console.log('[mintTicket] Ticket owner after transfer:', owner);
     console.log('[mintTicket] Expected owner (buyer):', buyerAddressChecksummed);
 
