@@ -53,9 +53,21 @@ function PaymentFailedContent() {
   const eventId = payment?.event_id;
 
   return (
-    <div className="min-h-screen pt-[72px] pb-16 px-4">
-      <div className="dp-container max-w-[600px]">
-        <div className="dp-surface p-8 text-center">
+    <main className="min-h-screen px-4 py-10 sm:px-6 sm:py-16">
+      <div className="dp-container max-w-5xl">
+        <div className="mb-8 border-b pb-6" style={{ borderColor: 'var(--border)' }}>
+          <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: 'var(--accent)' }}>Tivent · Checkout</p>
+          <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end"><div><h1 className="text-4xl font-semibold tracking-tighter sm:text-5xl">A payment pause<span style={{ color: 'var(--accent)' }}>.</span></h1><p className="mt-3 max-w-lg text-[14px]" style={{ color: 'var(--text-secondary)' }}>Your plans can still happen. Review the details below and try again when you’re ready.</p></div><span className="dp-mono text-[11px] uppercase tracking-[0.14em]" style={{ color: 'var(--text-muted)' }}>Order update / 03</span></div>
+        </div>
+        <div className="grid items-start gap-5 lg:grid-cols-[0.7fr_1.3fr]">
+          <aside className="dp-surface p-6 sm:p-7 lg:sticky lg:top-8">
+            <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl" style={{ backgroundColor: 'var(--error-muted)' }}><XCircle size={24} style={{ color: 'var(--error)' }} /></div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em]" style={{ color: 'var(--text-muted)' }}>Checkout status</p>
+            <h2 className="mt-2 text-2xl font-semibold tracking-[-0.04em]">Not completed</h2>
+            <p className="mt-3 text-[13px] leading-6" style={{ color: 'var(--text-secondary)' }}>No charge was applied to this attempt. Your selected event remains available while tickets last.</p>
+            <div className="mt-6 border-t pt-5" style={{ borderColor: 'var(--border)' }}><p className="mb-2 text-[10px] uppercase tracking-[0.14em]" style={{ color: 'var(--text-muted)' }}>Common causes</p><p className="text-[12px] leading-5" style={{ color: 'var(--text-secondary)' }}>Expired checkout · Insufficient balance · Provider declined · Connection issue</p></div>
+          </aside>
+          <div className="dp-surface p-6 sm:p-8 text-center">
           {/* Error Icon */}
           <div
             className="w-20 h-20 rounded-full mx-auto mb-6 flex items-center justify-center"
@@ -127,7 +139,7 @@ function PaymentFailedContent() {
 
           {/* Warning Message */}
           <div className="mb-8 p-4 rounded-lg flex items-start gap-3 text-left" style={{ backgroundColor: 'var(--warning-muted)' }}>
-            <AlertTriangle size={18} className="flex-shrink-0 mt-0.5" style={{ color: 'var(--warning)' }} />
+            <AlertTriangle size={18} className="shrink-0 mt-0.5" style={{ color: 'var(--warning)' }} />
             <div>
               <p className="text-[13px] font-semibold mb-1" style={{ color: 'var(--warning)' }}>
                 No Charge Applied
@@ -171,9 +183,10 @@ function PaymentFailedContent() {
               )}
             </p>
           </div>
+          </div>
         </div>
       </div>
-    </div>
+    </main>
   );
 }
 

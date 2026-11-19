@@ -12,6 +12,7 @@ import {
   ArrowLeft,
   QrCode,
   Tag,
+  Ticket,
   Calendar,
   MapPin,
   User,
@@ -231,43 +232,19 @@ export default function TicketDetailPage() {
   };
 
   return (
-    <div className="min-h-screen pt-[72px] pb-16 px-4">
-      <div className="dp-container max-w-[900px]">
-        {/* Back */}
-        <button
-          onClick={() => router.push('/tickets')}
-          className="dp-btn-ghost mb-6"
-          style={{ padding: '4px 0', color: 'var(--text-muted)' }}
-        >
-          <ArrowLeft size={14} /> Back to My Tickets
-        </button>
-
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <h1 className="text-[24px] md:text-[28px] font-semibold tracking-[-0.02em]">
-              Ticket #{ticket.tokenId}
-            </h1>
-            {getStatusBadge()}
-            {isOwner && (
-              <span className="text-[11px] font-medium px-2 py-1 rounded" style={{ backgroundColor: 'var(--accent-muted)', color: 'var(--accent)' }}>
-                You own this
-              </span>
-            )}
-          </div>
-          <p className="text-[15px]" style={{ color: 'var(--text-secondary)' }}>
-            {ticket.eventData?.title || `Event #${ticket.eventId}`}
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <main className="min-h-screen px-4 pb-20 pt-24 md:pt-28">
+      <div className="dp-container max-w-6xl">
+        <button onClick={() => router.push('/tickets')} className="dp-btn-ghost mb-8" style={{ padding: '4px 0', color: 'var(--text-muted)' }}><ArrowLeft size={14} /> Back to collection</button>
+        <header className="mb-8 border-b pb-6" style={{ borderColor: 'var(--border)' }}>
+          <div className="mb-3 flex flex-wrap items-center gap-3"><p className="text-[10px] font-semibold uppercase tracking-[0.17em]" style={{ color: 'var(--accent)' }}>Your digital pass · #{ticket.tokenId}</p>{getStatusBadge()}{isOwner && <span className="rounded-full px-2.5 py-1 text-[10px] font-medium" style={{ backgroundColor: 'var(--accent-muted)', color: 'var(--accent)' }}>In your wallet</span>}</div>
+          <h1 className="max-w-3xl text-3xl font-semibold leading-tight tracking-[-0.045em] md:text-5xl">{ticket.eventData?.title || `Event #${ticket.eventId}`}</h1>
+        </header>
+        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-5">
+          <div className="space-y-5">
             {/* Holographic Ticket Display */}
-            <div className="dp-surface p-6">
-              <h2 className="text-[11px] font-semibold mb-4" style={{ color: 'var(--text-muted)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-                Your Ticket
-              </h2>
+            <div className="dp-surface overflow-hidden rounded-2xl p-4 sm:p-7">
+              <div className="mb-5 flex items-center justify-between border-b pb-4" style={{ borderColor: 'var(--border)' }}><div><p className="text-[10px] font-semibold uppercase tracking-[0.16em]" style={{ color: 'var(--accent)' }}>Tivent · Admit one</p><h2 className="mt-1 text-lg font-semibold tracking-tight">Your collectible pass</h2></div><Ticket size={18} style={{ color: 'var(--text-muted)' }} /></div>
               <div className="flex justify-center">
                 <AdmitOneTicket
                   name={ticket.ticketTypeName?.toUpperCase() || 'GENERAL ADMISSION'}
@@ -418,7 +395,7 @@ export default function TicketDetailPage() {
 
           {/* Sidebar */}
           <div className="lg:col-span-1">
-            <div className="dp-surface p-6 space-y-4 sticky top-[72px]">
+            <div className="dp-surface rounded-2xl p-5 space-y-4 sticky top-24">
               <h2 className="text-[11px] font-semibold" style={{ color: 'var(--text-muted)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>Actions</h2>
 
               {/* QR Code */}
@@ -528,6 +505,6 @@ export default function TicketDetailPage() {
           </div>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

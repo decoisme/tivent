@@ -103,23 +103,27 @@ export default function ResaleMarketplacePage() {
   });
 
   return (
-    <div className="min-h-screen pt-[72px] pb-16 px-4">
-      <div className="dp-container">
-        {/* Header */}
-        <div className="mb-8">
-          <button onClick={() => router.push('/')} className="dp-btn-ghost mb-4" style={{ padding: '4px 0', color: 'var(--text-muted)' }}>
-            <ArrowLeft size={14} /> Home
+    <main className="min-h-screen px-4 pb-20 pt-24 md:pt-28">
+      <div className="dp-container max-w-6xl">
+        <header className="mb-10 border-b pb-8" style={{ borderColor: 'var(--border)' }}>
+          <button onClick={() => router.push('/')} className="dp-btn-ghost mb-8" style={{ padding: '4px 0', color: 'var(--text-muted)' }}>
+            <ArrowLeft size={14} /> Back home
           </button>
-          <h1 className="text-[28px] md:text-[32px] font-semibold tracking-[-0.03em] mb-2">
-            Marketplace
-          </h1>
-          <p className="text-[15px]" style={{ color: 'var(--text-secondary)' }}>
-            Browse verified ticket resales with anti-scalping protection.
-          </p>
-        </div>
+          <div className="grid gap-8 md:grid-cols-[1fr_auto] md:items-end">
+            <div>
+              <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: 'var(--accent)' }}>The exchange · verified resale</p>
+              <h1 className="max-w-3xl text-4xl font-semibold leading-[1.02] tracking-[-0.055em] md:text-6xl">A better way to<br className="hidden sm:block" /> get in.</h1>
+              <p className="mt-4 max-w-xl text-[15px] leading-7" style={{ color: 'var(--text-secondary)' }}>Discover tickets released by the crowd. Every transfer is verified, protected, and priced within event-set limits.</p>
+            </div>
+            <div className="flex items-center gap-3 rounded-xl border px-4 py-3" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
+              <span className="flex h-10 w-10 items-center justify-center rounded-full" style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}><Shield size={18} /></span>
+              <div><p className="text-sm font-semibold">Protected by design</p><p className="mt-0.5 text-xs" style={{ color: 'var(--text-muted)' }}>On-chain · owner verified</p></div>
+            </div>
+          </div>
+        </header>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
+        <div className="mb-8 grid grid-cols-3 border-y" style={{ borderColor: 'var(--border)' }}>
           <div className="dp-surface p-5">
             <div className="flex items-center gap-2 mb-2">
               <Ticket size={14} style={{ color: 'var(--text-muted)' }} />
@@ -283,6 +287,6 @@ export default function ResaleMarketplacePage() {
           </div>
         )}
       </div>
-    </div>
+    </main>
   );
 }

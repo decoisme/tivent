@@ -94,10 +94,10 @@ export default function OrganizerDashboard() {
   }
 
   return (
-    <div className="min-h-screen pt-[72px] pb-16 px-4">
-      <div className="dp-container max-w-[1080px]">
+    <div className="min-h-screen pt-24 pb-20 px-4">
+      <div className="dp-container max-w-[1200px]">
         {/* Header */}
-        <div className="flex items-start justify-between mb-8">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-5 mb-9 border-b pb-7" style={{ borderColor: 'var(--border)' }}>
           <div>
             <button
               onClick={() => router.push('/')}
@@ -106,14 +106,15 @@ export default function OrganizerDashboard() {
             >
               <ArrowLeft size={14} /> Home
             </button>
-            <h1 className="text-[28px] md:text-[32px] font-semibold tracking-[-0.03em] mb-1">
+            <p className="text-[10px] uppercase tracking-[0.2em] font-semibold mb-3" style={{ color: 'var(--accent)' }}>ORGANIZER / OVERVIEW</p>
+                        <h1 className="text-[32px] md:text-[44px] font-semibold tracking-[-0.04em] mb-2">
               Organizer Dashboard
             </h1>
             <p className="text-[14px]" style={{ color: 'var(--text-secondary)' }}>
               Manage your events and monitor ticket sales.
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 self-start md:self-auto">
             <button onClick={refreshData} className="dp-btn-ghost" style={{ padding: '8px' }}>
               <RefreshCw size={14} />
             </button>
@@ -124,8 +125,8 @@ export default function OrganizerDashboard() {
         </div>
 
         {/* Overview Metrics */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <div className="dp-surface p-5">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+          <div className="dp-surface p-5 md:p-6 hover:-translate-y-0.5 transition-transform">
             <div className="flex items-center gap-2 mb-3">
               <Ticket size={14} style={{ color: 'var(--text-muted)' }} />
               <span className="text-[11px] font-semibold uppercase tracking-[0.04em]" style={{ color: 'var(--text-muted)' }}>
@@ -135,7 +136,7 @@ export default function OrganizerDashboard() {
             <p className="text-[24px] font-semibold">{stats.totalTicketsSold.toLocaleString()}</p>
           </div>
 
-          <div className="dp-surface p-5">
+          <div className="dp-surface p-5 md:p-6 hover:-translate-y-0.5 transition-transform">
             <div className="flex items-center gap-2 mb-3">
               <DollarSign size={14} style={{ color: 'var(--text-muted)' }} />
               <span className="text-[11px] font-semibold uppercase tracking-[0.04em]" style={{ color: 'var(--text-muted)' }}>
@@ -146,7 +147,7 @@ export default function OrganizerDashboard() {
             <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>POL</p>
           </div>
 
-          <div className="dp-surface p-5">
+          <div className="dp-surface p-5 md:p-6 hover:-translate-y-0.5 transition-transform">
             <div className="flex items-center gap-2 mb-3">
               <BarChart3 size={14} style={{ color: 'var(--text-muted)' }} />
               <span className="text-[11px] font-semibold uppercase tracking-[0.04em]" style={{ color: 'var(--text-muted)' }}>
@@ -157,7 +158,7 @@ export default function OrganizerDashboard() {
             <p className="text-[11px]" style={{ color: 'var(--success)' }}>{stats.activeEvents} active</p>
           </div>
 
-          <div className="dp-surface p-5">
+          <div className="dp-surface p-5 md:p-6 hover:-translate-y-0.5 transition-transform">
             <div className="flex items-center gap-2 mb-3">
               <TrendingUp size={14} style={{ color: 'var(--text-muted)' }} />
               <span className="text-[11px] font-semibold uppercase tracking-[0.04em]" style={{ color: 'var(--text-muted)' }}>
@@ -170,10 +171,10 @@ export default function OrganizerDashboard() {
         </div>
 
         {/* Quick Links */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-9">
           <button
             onClick={() => router.push('/gate')}
-            className="dp-surface-interactive p-4 text-left flex items-center gap-3"
+            className="dp-surface-interactive p-4 md:p-5 text-left flex items-center gap-3"
           >
             <Users size={16} style={{ color: 'var(--text-muted)' }} />
             <div>
@@ -185,7 +186,7 @@ export default function OrganizerDashboard() {
 
           <button
             onClick={() => router.push('/admin/fraud')}
-            className="dp-surface-interactive p-4 text-left flex items-center gap-3"
+            className="dp-surface-interactive p-4 md:p-5 text-left flex items-center gap-3"
           >
             <AlertTriangle size={16} style={{ color: 'var(--text-muted)' }} />
             <div>
@@ -197,7 +198,7 @@ export default function OrganizerDashboard() {
 
           <button
             onClick={() => router.push('/resale')}
-            className="dp-surface-interactive p-4 text-left flex items-center gap-3"
+            className="dp-surface-interactive p-4 md:p-5 text-left flex items-center gap-3"
           >
             <TrendingUp size={16} style={{ color: 'var(--text-muted)' }} />
             <div>
@@ -210,9 +211,10 @@ export default function OrganizerDashboard() {
 
         {/* Events List */}
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.06em] mb-4" style={{ color: 'var(--text-muted)' }}>
-            Your Events ({events.length})
-          </p>
+          <div className="mb-4">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] mb-1" style={{ color: 'var(--accent)' }}>Portfolio</p>
+            <h2 className="text-[20px] md:text-[24px] font-semibold tracking-[-0.03em]">Your Events <span className="text-[13px] font-normal" style={{ color: 'var(--text-muted)' }}>({events.length})</span></h2>
+          </div>
 
           {events.length === 0 ? (
             <div className="dp-surface p-16 text-center">
@@ -234,10 +236,10 @@ export default function OrganizerDashboard() {
                 return (
                   <div
                     key={event.eventId}
-                    className="dp-surface overflow-hidden"
+                    className="dp-surface overflow-hidden hover:border-[var(--accent)] transition-colors"
                   >
                     {/* Main Event Card */}
-                    <div className="p-5">
+                    <div className="p-5 md:p-6">
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex-1 mr-4">
                           <div className="flex items-center gap-2 mb-1 flex-wrap">
@@ -294,7 +296,7 @@ export default function OrganizerDashboard() {
                       </div>
 
                       {/* Quick Stats */}
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 border-t pt-4" style={{ borderColor: 'var(--border)' }}>
                         <div>
                           <p className="text-[11px] mb-0.5" style={{ color: 'var(--text-muted)' }}>Sold</p>
                           <p className="text-[15px] font-semibold">

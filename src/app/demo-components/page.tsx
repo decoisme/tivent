@@ -38,37 +38,36 @@ export default function DemoComponentsPage() {
   ];
 
   return (
-    <main className="min-h-screen py-12 px-4" style={{ backgroundColor: 'var(--bg)' }}>
-      <div className="dp-container max-w-4xl mx-auto">
-        {/* Header */}
-        <button
-          onClick={() => router.back()}
-          className="flex items-center gap-2 mb-6 text-[14px] hover:opacity-80 transition-opacity"
-          style={{ color: 'var(--text-secondary)' }}
-        >
-          <ArrowLeft size={16} />
-          Back
-        </button>
+    <main className="min-h-screen px-4 py-8 sm:px-6 sm:py-14" style={{ backgroundColor: 'var(--bg)' }}>
+      <div className="dp-container max-w-6xl mx-auto">
+        <button onClick={() => router.back()} className="dp-btn-ghost mb-8" style={{ padding: '4px 0', color: 'var(--text-muted)' }}><ArrowLeft size={14} /> Back to previous page</button>
+        <header className="mb-9 border-b pb-7" style={{ borderColor: 'var(--border)' }}>
+          <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: 'var(--accent)' }}>Tivent / Design lab</p>
+          <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
+            <div><h1 className="text-4xl font-semibold tracking-[-0.05em] sm:text-5xl">Form components<span style={{ color: 'var(--accent)' }}>.</span></h1><p className="mt-3 max-w-2xl text-[14px] leading-6" style={{ color: 'var(--text-secondary)' }}>A working field kit for building event listings. Explore the controls, change values and inspect the resulting form data.</p></div>
+            <span className="dp-mono text-[11px] uppercase tracking-[0.14em]" style={{ color: 'var(--text-muted)' }}>Interactive specimen / 01—05</span>
+          </div>
+        </header>
 
-        <div className="mb-8">
-          <h1 className="text-[36px] font-semibold tracking-[-0.03em] mb-2" style={{ color: 'var(--text-primary)' }}>
-            Custom Form Components
-          </h1>
-          <p className="text-[15px]" style={{ color: 'var(--text-secondary)' }}>
-            Professional custom dropdown, date picker, and time picker matching Tivent design system.
-          </p>
-        </div>
+        <div className="grid items-start gap-6 lg:grid-cols-[210px_minmax(0,1fr)]">
+          <aside className="dp-surface p-5 lg:sticky lg:top-8">
+            <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.14em]" style={{ color: 'var(--text-muted)' }}>On this page</p>
+            <nav className="space-y-1 text-[12px]">
+              {[['#select-demo', '01 · Select menus'], ['#date-demo', '02 · Date fields'], ['#time-demo', '03 · Time fields'], ['#form-demo', '04 · Event payload'], ['#features-demo', '05 · Principles']].map(([href, label]) => <a key={href} href={href} className="block rounded-lg px-3 py-2 transition-colors hover:bg-[var(--surface-hover)]" style={{ color: 'var(--text-secondary)' }}>{label}</a>)}
+            </nav>
+            <div className="mt-5 border-t pt-4" style={{ borderColor: 'var(--border)' }}><p className="text-[11px] leading-5" style={{ color: 'var(--text-muted)' }}>Changes are reflected instantly in the specimen and serialized preview.</p></div>
+          </aside>
 
-        {/* Demo Sections */}
-        <div className="space-y-8">
+          <div className="space-y-5">
           {/* Custom Select */}
-          <section className="dp-surface p-6">
+          <section id="select-demo" className="dp-surface p-5 sm:p-7">
+            <div className="mb-6 flex items-start justify-between gap-4"><div><p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.14em]" style={{ color: 'var(--accent)' }}>01 / Select</p>
             <h2 className="text-[20px] font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>
               Custom Select Dropdown
             </h2>
             <p className="text-[13px] mb-6" style={{ color: 'var(--text-muted)' }}>
               Custom styled dropdown with smooth animations and keyboard support
-            </p>
+            </p></div><span className="dp-mono hidden text-[11px] sm:block" style={{ color: 'var(--text-muted)' }}>A—01</span></div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <CustomSelect
@@ -111,7 +110,8 @@ export default function DemoComponentsPage() {
           </section>
 
           {/* Custom Date Picker */}
-          <section className="dp-surface p-6">
+          <section id="date-demo" className="dp-surface p-5 sm:p-7">
+            <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.14em]" style={{ color: 'var(--accent)' }}>02 / Date</p>
             <h2 className="text-[20px] font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>
               Custom Date Picker
             </h2>
@@ -165,7 +165,8 @@ export default function DemoComponentsPage() {
           </section>
 
           {/* Custom Time Picker */}
-          <section className="dp-surface p-6">
+          <section id="time-demo" className="dp-surface p-5 sm:p-7">
+            <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.14em]" style={{ color: 'var(--accent)' }}>03 / Time</p>
             <h2 className="text-[20px] font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>
               Custom Time Picker
             </h2>
@@ -214,7 +215,8 @@ export default function DemoComponentsPage() {
           </section>
 
           {/* Complete Form Example */}
-          <section className="dp-surface p-6">
+          <section id="form-demo" className="dp-surface p-5 sm:p-7">
+            <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.14em]" style={{ color: 'var(--accent)' }}>04 / Payload</p>
             <h2 className="text-[20px] font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>
               Complete Event Form
             </h2>
@@ -249,7 +251,8 @@ export default function DemoComponentsPage() {
           </section>
 
           {/* Features List */}
-          <section className="dp-surface p-6">
+          <section id="features-demo" className="dp-surface p-5 sm:p-7">
+            <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.14em]" style={{ color: 'var(--accent)' }}>05 / Principles</p>
             <h2 className="text-[20px] font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
               Features
             </h2>
@@ -281,6 +284,7 @@ export default function DemoComponentsPage() {
               ))}
             </div>
           </section>
+          </div>
         </div>
       </div>
     </main>

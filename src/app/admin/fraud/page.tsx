@@ -129,10 +129,10 @@ export default function FraudManagementPage() {
   }
 
   return (
-    <div className="min-h-screen pt-[72px] pb-16 px-4">
-      <div className="dp-container">
+    <div className="min-h-screen pt-24 pb-20 px-4">
+      <div className="dp-container max-w-[1200px]">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-9 border-b pb-7" style={{ borderColor: 'var(--border)' }}>
           <button
             onClick={() => router.push('/organizer')}
             className="dp-btn-ghost mb-4"
@@ -140,7 +140,8 @@ export default function FraudManagementPage() {
           >
             <ArrowLeft size={14} /> Dashboard
           </button>
-          <h1 className="text-[28px] md:text-[32px] font-semibold tracking-[-0.03em] mb-2">
+          <p className="text-[10px] uppercase tracking-[0.2em] font-semibold mb-3" style={{ color: 'var(--accent)' }}>ADMIN / MONITORING</p>
+                    <h1 className="text-[32px] md:text-[44px] font-semibold tracking-[-0.04em] mb-3">
             Fraud Detection
           </h1>
           <p className="text-[15px]" style={{ color: 'var(--text-secondary)' }}>
@@ -150,8 +151,8 @@ export default function FraudManagementPage() {
 
         {/* Metrics */}
         {!statsLoading && stats && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <div className="dp-surface p-5">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-7">
+            <div className="dp-surface p-5 md:p-6">
               <div className="flex items-center gap-2 mb-3">
                 <AlertTriangle size={14} style={{ color: 'var(--text-muted)' }} />
                 <span className="text-[11px] font-semibold uppercase tracking-[0.04em]" style={{ color: 'var(--text-muted)' }}>
@@ -160,7 +161,7 @@ export default function FraudManagementPage() {
               </div>
               <p className="text-[24px] font-semibold">{stats.totalFlags}</p>
             </div>
-            <div className="dp-surface p-5">
+            <div className="dp-surface p-5 md:p-6">
               <div className="flex items-center gap-2 mb-3">
                 <Activity size={14} style={{ color: 'var(--accent)' }} />
                 <span className="text-[11px] font-semibold uppercase tracking-[0.04em]" style={{ color: 'var(--text-muted)' }}>
@@ -169,7 +170,7 @@ export default function FraudManagementPage() {
               </div>
               <p className="text-[24px] font-semibold" style={{ color: 'var(--accent)' }}>{stats.activeFlags}</p>
             </div>
-            <div className="dp-surface p-5">
+            <div className="dp-surface p-5 md:p-6">
               <div className="flex items-center gap-2 mb-3">
                 <CheckCircle2 size={14} style={{ color: 'var(--success)' }} />
                 <span className="text-[11px] font-semibold uppercase tracking-[0.04em]" style={{ color: 'var(--text-muted)' }}>
@@ -178,7 +179,7 @@ export default function FraudManagementPage() {
               </div>
               <p className="text-[24px] font-semibold" style={{ color: 'var(--success)' }}>{stats.resolvedFlags}</p>
             </div>
-            <div className="dp-surface p-5">
+            <div className="dp-surface p-5 md:p-6">
               <div className="flex items-center gap-2 mb-3">
                 <Shield size={14} style={{ color: 'var(--text-muted)' }} />
                 <span className="text-[11px] font-semibold uppercase tracking-[0.04em]" style={{ color: 'var(--text-muted)' }}>
@@ -198,7 +199,7 @@ export default function FraudManagementPage() {
         )}
 
         {/* Filters */}
-        <div className="dp-surface p-5 mb-6">
+        <div className="dp-surface p-5 md:p-6 mb-7">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <CustomSelect
               label="Status"
@@ -271,14 +272,14 @@ export default function FraudManagementPage() {
             {flags.map((flag) => (
               <div
                 key={flag.id}
-                className="dp-surface overflow-hidden"
+                className="dp-surface overflow-hidden hover:border-[var(--accent)] transition-colors"
               >
                 <div className="flex items-stretch">
                   {/* Risk stripe */}
                   <div className="w-1 flex-shrink-0" style={{ backgroundColor: flag.is_resolved ? 'var(--success)' : getRiskColor(flag.risk_level) }} />
 
-                  <div className="flex-1 p-5">
-                    <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1 p-5 md:p-6">
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-4">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           {/* Risk score */}
@@ -317,7 +318,7 @@ export default function FraudManagementPage() {
                     </div>
 
                     {/* Actions */}
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
                         Flagged by: {flag.flagged_by}
                         {flag.is_resolved && flag.resolved_by && ` · Resolved by: ${flag.resolved_by}`}

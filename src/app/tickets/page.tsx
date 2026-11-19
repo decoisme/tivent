@@ -30,18 +30,18 @@ export default function TicketsPage() {
 
   if (!isConnected) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4">
-        <div className="dp-surface p-12 max-w-md w-full text-center">
-          <Lock size={28} className="mx-auto mb-4" style={{ color: 'var(--text-muted)' }} />
-          <h2 className="text-[20px] font-semibold mb-2">Wallet Required</h2>
-          <p className="text-[14px] mb-6" style={{ color: 'var(--text-secondary)' }}>
-            Connect your wallet to view your tickets.
-          </p>
-          <button onClick={() => router.push('/')} className="dp-btn-primary">
-            Go to Home
-          </button>
+      <main className="flex min-h-screen items-center justify-center px-4 py-20">
+        <div className="dp-surface w-full max-w-lg overflow-hidden rounded-2xl">
+          <div className="h-1" style={{ background: 'var(--accent)' }} />
+          <div className="px-7 py-12 text-center sm:px-12">
+            <span className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-full" style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}><Lock size={22} /></span>
+            <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em]" style={{ color: 'var(--accent)' }}>Private collection</p>
+            <h2 className="text-2xl font-semibold tracking-tight">Your passes are waiting</h2>
+            <p className="mx-auto mb-7 mt-3 max-w-sm text-sm leading-6" style={{ color: 'var(--text-secondary)' }}>Connect the wallet that holds your tickets to view your collection and live entry codes.</p>
+            <button onClick={() => router.push('/')} className="dp-btn-primary">Go to home to connect</button>
+          </div>
         </div>
-      </div>
+      </main>
     );
   }
 
@@ -63,27 +63,18 @@ export default function TicketsPage() {
   };
 
   return (
-    <div className="min-h-screen pt-[72px] pb-16 px-4">
-      <div className="dp-container">
-        {/* Header */}
-        <div className="mb-8">
-          <button
-            onClick={() => router.push('/')}
-            className="dp-btn-ghost mb-4"
-            style={{ padding: '4px 0', color: 'var(--text-muted)' }}
-          >
-            <ArrowLeft size={14} /> Home
-          </button>
-          <h1 className="text-[28px] md:text-[32px] font-semibold tracking-[-0.03em] mb-2">
-            My Tickets
-          </h1>
-          <p className="text-[15px]" style={{ color: 'var(--text-secondary)' }}>
-            Your digital passes with on-chain ownership.
-          </p>
-        </div>
+    <main className="min-h-screen px-4 pb-20 pt-24 md:pt-28">
+      <div className="dp-container max-w-6xl">
+        <header className="mb-10 border-b pb-8" style={{ borderColor: 'var(--border)' }}>
+          <button onClick={() => router.push('/')} className="dp-btn-ghost mb-8" style={{ padding: '4px 0', color: 'var(--text-muted)' }}><ArrowLeft size={14} /> Back home</button>
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+            <div><p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: 'var(--accent)' }}>Your collection · on-chain passes</p><h1 className="text-4xl font-semibold leading-none tracking-[-0.055em] md:text-6xl">The night is<br className="hidden sm:block" /> yours.</h1><p className="mt-4 max-w-lg text-[15px] leading-7" style={{ color: 'var(--text-secondary)' }}>Your tickets, ready when you are. Open a pass for details or bring up its live entry code at the door.</p></div>
+            <div className="flex items-center gap-2 rounded-full border px-3 py-2" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}><span className="h-2 w-2 rounded-full" style={{ background: 'var(--success)' }} /><span className="dp-mono text-xs" style={{ color: 'var(--text-secondary)' }}>{address ? `${address.slice(0, 6)}…${address.slice(-4)}` : 'Wallet connected'}</span></div>
+          </div>
+        </header>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
+        <div className="mb-8 grid grid-cols-3 gap-0 border-y" style={{ borderColor: 'var(--border)' }}>
           <div className="dp-surface p-5">
             <p className="text-[11px] mb-1" style={{ color: 'var(--text-muted)' }}>Total</p>
             <p className="text-[24px] font-semibold">{tickets.length}</p>
@@ -166,11 +157,11 @@ export default function TicketsPage() {
 
         {/* Tickets List — designed as premium digital passes */}
         {!loading && !error && filteredTickets.length > 0 && (
-          <div className="space-y-3">
+          <div className="grid gap-4 md:grid-cols-2">
             {filteredTickets.map((ticket) => (
-              <div
+              <article
                 key={ticket.tokenId}
-                className="dp-surface-interactive overflow-hidden"
+                className="dp-surface-interactive overflow-hidden rounded-xl transition-transform duration-200 hover:-translate-y-0.5"
               >
                 <div className="flex items-stretch">
                   {/* Left accent stripe */}
@@ -186,7 +177,7 @@ export default function TicketsPage() {
                   />
 
                   {/* Content */}
-                  <div className="flex-1 p-5">
+                  <div className="min-w-0 flex-1 p-5 sm:p-6">
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1 mr-4">
                         <div className="flex items-center gap-2 mb-1">
@@ -234,7 +225,7 @@ export default function TicketsPage() {
                     )}
 
                     {/* Actions */}
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       <button
                         onClick={() => router.push(`/tickets/${ticket.tokenId}`)}
                         className="dp-btn-secondary"
@@ -254,11 +245,11 @@ export default function TicketsPage() {
                     </div>
                   </div>
                 </div>
-              </div>
+              </article>
             ))}
           </div>
         )}
       </div>
-    </div>
+    </main>
   );
 }

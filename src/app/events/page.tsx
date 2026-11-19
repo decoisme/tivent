@@ -250,45 +250,52 @@ export default function EventsPage() {
   };
 
   return (
-    <div className="min-h-screen pt-[72px] pb-16 px-4">
-      <div className="dp-container">
-        {/* Header */}
-        <div className="mb-10">
-          <button
-            onClick={() => router.push('/')}
-            className="dp-btn-ghost mb-4"
-            style={{ padding: '4px 0', color: 'var(--text-muted)' }}
-          >
-            <ArrowLeft size={14} /> Back
-          </button>
-          <h1 className="text-[28px] md:text-[32px] font-semibold tracking-[-0.03em] mb-2">
-            Explore Events
-          </h1>
-          <p className="text-[15px]" style={{ color: 'var(--text-secondary)' }}>
-            Discover events with verified on-chain ticketing.
-          </p>
+    <main className="min-h-screen px-4 pb-20 pt-24 md:pt-28">
+      <div className="dp-container max-w-[1240px]">
+        <button
+          onClick={() => router.push('/')}
+          className="dp-btn-ghost mb-8"
+          style={{ padding: '4px 0', color: 'var(--text-muted)' }}
+        >
+          <ArrowLeft size={14} /> Back
+        </button>
+
+        <section className="relative mb-10 overflow-hidden rounded-[28px] border px-6 py-9 md:px-10 md:py-12" style={{ borderColor: 'var(--border)', background: 'radial-gradient(ellipse at 85% 15%, var(--accent-muted), transparent 38%), var(--surface)' }}>
+          <div className="relative z-10 max-w-2xl">
+            <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.22em]" style={{ color: 'var(--accent)' }}>The Tivent calendar</p>
+            <h1 className="mb-4 text-4xl font-semibold leading-[1.02] tracking-[-0.055em] md:text-6xl">Make a night<br className="hidden sm:block" /> of it.</h1>
+            <p className="max-w-lg text-[15px] leading-7 md:text-base" style={{ color: 'var(--text-secondary)' }}>
+              Discover what’s happening next. Every ticket is verified on-chain, so you can focus on the moments that matter.
+            </p>
+          </div>
+          <div className="pointer-events-none absolute -bottom-20 -right-10 hidden h-64 w-64 rounded-full border opacity-30 md:block" style={{ borderColor: 'var(--accent)' }} />
+          <div className="pointer-events-none absolute -bottom-12 right-12 hidden h-44 w-44 rounded-full border opacity-20 md:block" style={{ borderColor: 'var(--accent)' }} />
+        </section>
+
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: 'var(--text-muted)' }}>Find your next experience</p>
+            <h2 className="text-2xl font-semibold tracking-[-0.04em]">Events <span style={{ color: 'var(--text-muted)' }}>· {filteredEvents.length}</span></h2>
+          </div>
+          <div className="flex w-fit items-center gap-1 rounded-full border p-1" style={{ borderColor: 'var(--border)', backgroundColor: 'var(--surface)' }}>
+            {(['available', 'all', 'soldout'] as const).map((f) => (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                className={`rounded-full px-4 py-2 text-[12px] font-medium transition-colors ${filter === f ? 'dp-tab-active' : 'dp-tab'}`}
+              >
+                {f === 'available' ? 'Available' : f === 'all' ? 'All Events' : 'Sold Out'}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* Filters */}
-        <div className="flex items-center gap-2 mb-8">
-          {(['available', 'all', 'soldout'] as const).map((f) => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`dp-tab ${filter === f ? 'dp-tab-active' : ''}`}
-            >
-              {f === 'available' ? 'Available' : f === 'all' ? 'All Events' : 'Sold Out'}
-            </button>
-          ))}
-        </div>
-
-        {/* Loading */}
         {loading && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="dp-surface overflow-hidden">
-                <div className="dp-skeleton h-[160px]" style={{ borderRadius: 0 }} />
-                <div className="p-5 space-y-3">
+              <div key={i} className="dp-surface overflow-hidden rounded-2xl">
+                <div className="dp-skeleton h-[220px]" style={{ borderRadius: 0 }} />
+                <div className="space-y-3 p-5">
                   <div className="dp-skeleton h-4 w-3/4" />
                   <div className="dp-skeleton h-3 w-1/2" />
                   <div className="dp-skeleton h-3 w-2/3" />
@@ -298,107 +305,76 @@ export default function EventsPage() {
           </div>
         )}
 
-        {/* Empty */}
         {!loading && filteredEvents.length === 0 && (
-          <div className="dp-surface p-16 text-center max-w-lg mx-auto">
-            <Ticket size={32} className="mx-auto mb-4" style={{ color: 'var(--text-muted)' }} />
-            <h3 className="text-[18px] font-semibold mb-2">No events found</h3>
-            <p className="text-[14px] mb-6" style={{ color: 'var(--text-secondary)' }}>
+          <div className="dp-surface mx-auto max-w-xl rounded-3xl px-6 py-16 text-center md:px-12">
+            <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl" style={{ backgroundColor: 'var(--accent-muted)', color: 'var(--accent)' }}><Ticket size={25} /></div>
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: 'var(--text-muted)' }}>A quiet moment</p>
+            <h3 className="mb-2 text-2xl font-semibold tracking-[-0.04em]">No events found</h3>
+            <p className="mb-7 text-[14px]" style={{ color: 'var(--text-secondary)' }}>
               {filter === 'all'
                 ? 'There are no events available yet.'
                 : `No ${filter} events at the moment.`}
             </p>
             {filter !== 'all' && (
-              <button onClick={() => setFilter('all')} className="dp-btn-secondary">
-                View All Events
-              </button>
+              <button onClick={() => setFilter('all')} className="dp-btn-secondary">View All Events</button>
             )}
           </div>
         )}
 
-        {/* Events Grid */}
         {!loading && filteredEvents.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
             {filteredEvents.map((event) => (
-              <div
+              <article
                 key={event.eventId}
                 onClick={() => router.push(`/events/${event.eventId}`)}
-                className="dp-surface-interactive overflow-hidden cursor-pointer group"
+                className="dp-surface-interactive group cursor-pointer overflow-hidden rounded-2xl transition-transform duration-300 hover:-translate-y-1"
               >
-                {/* Image area */}
-                <div
-                  className="h-[160px] flex items-center justify-center"
-                  style={{ backgroundColor: 'var(--surface-elevated)' }}
-                >
+                <div className="relative h-[220px] overflow-hidden" style={{ backgroundColor: 'var(--surface-elevated)' }}>
                   {event.metadata?.imageUrl ? (
-                    <img
-                      src={event.metadata.imageUrl}
-                      alt={event.metadata.title}
-                      className="w-full h-full object-cover"
-                    />
+                    <img src={event.metadata.imageUrl} alt={event.metadata.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]" />
                   ) : (
-                    <Ticket size={32} style={{ color: 'var(--text-muted)' }} />
+                    <div className="flex h-full items-center justify-center" style={{ color: 'var(--text-muted)' }}><Ticket size={34} /></div>
                   )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/5 to-transparent" />
+                  <div className="absolute left-4 top-4">{getStatusBadge(event)}</div>
+                  <div className="absolute bottom-4 left-5 right-5">
+                    <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/70">Event № {event.eventId}</p>
+                    <h3 className="line-clamp-2 text-2xl font-semibold leading-tight tracking-[-0.04em] text-white">{event.metadata?.title || `Event #${event.eventId}`}</h3>
+                  </div>
                 </div>
-
-                {/* Info */}
                 <div className="p-5">
-                  <div className="flex items-start justify-between mb-3">
-                    <h3 className="text-[15px] font-semibold tracking-[-0.01em] line-clamp-2 flex-1 mr-2">
-                      {event.metadata?.title || `Event #${event.eventId}`}
-                    </h3>
-                    {getStatusBadge(event)}
-                  </div>
-
-                  <div className="space-y-1.5 mb-4">
+                  <div className="mb-5 space-y-2">
                     <div className="flex items-center gap-2 text-[13px]" style={{ color: 'var(--text-secondary)' }}>
-                      <MapPin size={13} style={{ color: 'var(--text-muted)' }} />
-                      <span className="line-clamp-1">{event.metadata?.venue || 'Venue TBD'}</span>
+                      <MapPin size={14} style={{ color: 'var(--accent)' }} /><span className="line-clamp-1">{event.metadata?.venue || 'Venue TBD'}</span>
                     </div>
                     <div className="flex items-center gap-2 text-[13px]" style={{ color: 'var(--text-secondary)' }}>
-                      <Calendar size={13} style={{ color: 'var(--text-muted)' }} />
-                      <span>
-                        {event.metadata?.startDate
-                          ? new Date(event.metadata.startDate).toLocaleDateString('en-US', {
-                              month: 'short',
-                              day: 'numeric',
-                              year: 'numeric',
-                            })
-                          : 'Date TBD'}
-                      </span>
+                      <Calendar size={14} style={{ color: 'var(--accent)' }} />
+                      <span>{event.metadata?.startDate ? new Date(event.metadata.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Date TBD'}</span>
                     </div>
                   </div>
-
                   <hr className="dp-divider mb-4" />
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-[11px] mb-0.5" style={{ color: 'var(--text-muted)' }}>
-                        {event.lowestPrice === 0 ? 'Price' : event.lowestPrice === event.highestPrice ? 'Price' : 'From'}
-                      </p>
-                      <p className="text-[15px] font-semibold">
-                        {event.lowestPrice === 0 
+                  <div className="flex items-end justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: 'var(--text-muted)' }}>{event.lowestPrice === 0 ? 'Price' : event.lowestPrice === event.highestPrice ? 'Price' : 'From'}</p>
+                      <p className="truncate text-[15px] font-semibold">
+                        {event.lowestPrice === 0
                           ? 'Contact Organizer'
-                          : event.lowestPrice === event.highestPrice 
+                          : event.lowestPrice === event.highestPrice
                             ? formatIDR(event.lowestPrice)
-                            : `${formatIDR(event.lowestPrice)} - ${formatIDR(event.highestPrice)}`
-                        }
+                            : `${formatIDR(event.lowestPrice)} - ${formatIDR(event.highestPrice)}`}
                       </p>
                     </div>
-                    <div className="text-right">
-                      <p className="text-[11px] mb-0.5" style={{ color: 'var(--text-muted)' }}>Available</p>
-                      <p className="text-[15px] font-semibold">
-                        {event.maxTickets - event.ticketsSold}
-                        <span className="text-[12px] font-normal" style={{ color: 'var(--text-muted)' }}> / {event.maxTickets}</span>
-                      </p>
+                    <div className="shrink-0 text-right">
+                      <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: 'var(--text-muted)' }}>Remaining</p>
+                      <p className="text-[15px] font-semibold">{event.maxTickets - event.ticketsSold}<span className="text-[12px] font-normal" style={{ color: 'var(--text-muted)' }}> / {event.maxTickets}</span></p>
                     </div>
                   </div>
                 </div>
-              </div>
+              </article>
             ))}
           </div>
         )}
       </div>
-    </div>
+    </main>
   );
 }

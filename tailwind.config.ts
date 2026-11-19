@@ -10,14 +10,14 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        border: 'hsl(var(--border))',
+        border: 'var(--border)',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         primary: {
-          DEFAULT: 'hsl(var(--primary))',
-          foreground: 'hsl(var(--primary-foreground))',
+          DEFAULT: 'var(--primary)',
+          foreground: 'var(--primary-foreground)',
         },
         secondary: {
           DEFAULT: 'hsl(var(--secondary))',
@@ -32,8 +32,8 @@ const config: Config = {
           foreground: 'hsl(var(--muted-foreground))',
         },
         accent: {
-          DEFAULT: 'hsl(var(--accent))',
-          foreground: 'hsl(var(--accent-foreground))',
+          DEFAULT: 'var(--accent)',
+          foreground: 'var(--accent-foreground)',
         },
         popover: {
           DEFAULT: 'hsl(var(--popover))',

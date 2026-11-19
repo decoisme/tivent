@@ -208,163 +208,55 @@ export default function RedeemTicketPage() {
   }
 
   return (
-    <div className="min-h-screen py-12 px-4" style={{ backgroundColor: 'var(--bg)' }}>
-      <div className="dp-container max-w-2xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-[40px] font-semibold tracking-[-0.03em] mb-2" style={{ color: 'var(--text-primary)' }}>
-            Redeem Ticket
-          </h1>
-          <p className="text-[15px]" style={{ color: 'var(--text-secondary)' }}>
-            Confirm redemption to allow entry
-          </p>
-        </div>
-
-        {/* Ticket Info */}
-        <div className="dp-surface p-6 mb-6 border-2 border-green-500/30">
-          <div className="flex items-center gap-3 mb-6">
-            <Ticket size={40} style={{ color: 'var(--accent)' }} />
-            <div>
-              <h2 className="text-[24px] font-semibold" style={{ color: 'var(--text-primary)' }}>
-                Ticket #{tokenId}
-              </h2>
-              <p className="text-[13px]" style={{ color: 'var(--text-muted)' }}>
-                {ticket.eventData?.title}
-              </p>
-            </div>
+    <main className="min-h-screen px-4 py-8 sm:px-6 sm:py-14" style={{ backgroundColor: 'var(--bg)' }}>
+      <div className="dp-container max-w-5xl mx-auto">
+        <header className="mb-8 border-b pb-6" style={{ borderColor: 'var(--border)' }}>
+          <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: 'var(--accent)' }}>Tivent · Venue operations</p>
+          <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+            <div><h1 className="text-4xl font-semibold tracking-tighter sm:text-5xl">Admit to venue<span style={{ color: 'var(--accent)' }}>.</span></h1><p className="mt-3 text-[14px]" style={{ color: 'var(--text-secondary)' }}>Review the guest pass before confirming entry.</p></div>
+            <span className="dp-mono text-[11px] uppercase tracking-[0.14em]" style={{ color: 'var(--text-muted)' }}>Gate check-in / #{tokenId}</span>
           </div>
+        </header>
 
-          <div className="space-y-3 mb-6">
-            <div className="flex justify-between items-center text-[13px]">
-              <span style={{ color: 'var(--text-muted)' }}>Event ID</span>
-              <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>#{ticket.eventId}</span>
+        <div className="grid items-start gap-5 lg:grid-cols-[1.15fr_0.85fr]">
+          <section className="dp-surface overflow-hidden">
+            <div className="border-b p-5 sm:p-7" style={{ borderColor: 'var(--border)' }}>
+              <div className="mb-6 flex items-start justify-between gap-4">
+                <div><p className="text-[11px] font-semibold uppercase tracking-[0.14em]" style={{ color: 'var(--text-muted)' }}>Guest pass</p><h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em]">{ticket.eventData?.title}</h2></div>
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl" style={{ backgroundColor: 'var(--accent-muted)' }}><Ticket size={23} style={{ color: 'var(--accent)' }} /></div>
+              </div>
+              <div className="mb-6 flex items-center justify-between border-y py-4" style={{ borderColor: 'var(--border)' }}><span className="text-[12px] uppercase tracking-[0.12em]" style={{ color: 'var(--text-muted)' }}>Ticket ID</span><span className="dp-mono text-lg font-semibold">#{tokenId}</span></div>
+              <dl className="grid gap-x-8 gap-y-5 sm:grid-cols-2">
+                <div><dt className="mb-1 text-[11px] uppercase tracking-[0.12em]" style={{ color: 'var(--text-muted)' }}>Event number</dt><dd className="text-[14px] font-medium">#{ticket.eventId}</dd></div>
+                <div><dt className="mb-1 text-[11px] uppercase tracking-[0.12em]" style={{ color: 'var(--text-muted)' }}>Venue</dt><dd className="text-[14px] font-medium">{ticket.eventData?.venue}</dd></div>
+                <div><dt className="mb-1 text-[11px] uppercase tracking-[0.12em]" style={{ color: 'var(--text-muted)' }}>Event date</dt><dd className="text-[14px] font-medium">{ticket.eventData?.startDate ? new Date(ticket.eventData.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'TBD'}</dd></div>
+                <div><dt className="mb-1 text-[11px] uppercase tracking-[0.12em]" style={{ color: 'var(--text-muted)' }}>Original price</dt><dd className="text-[14px] font-medium">{formatEther(ticket.originalPrice)} POL</dd></div>
+              </dl>
+              <div className="mt-6 border-t pt-5" style={{ borderColor: 'var(--border)' }}><p className="mb-2 text-[11px] uppercase tracking-[0.12em]" style={{ color: 'var(--text-muted)' }}>Ticket holder</p><p className="dp-mono break-all text-[12px]" style={{ color: 'var(--text-secondary)' }}>{ticket.owner}</p></div>
             </div>
-            <div className="flex justify-between items-center text-[13px]">
-              <span style={{ color: 'var(--text-muted)' }}>Venue</span>
-              <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>{ticket.eventData?.venue}</span>
+            <div className="p-5 sm:p-7">
+              <div className="mb-4 flex items-center gap-2"><CheckCircle2 size={17} style={{ color: 'var(--success)' }} /><h3 className="text-[13px] font-semibold">Verification complete</h3></div>
+              <ul className="grid gap-3 sm:grid-cols-2">
+                {['QR code validated', 'Ownership confirmed', 'Ticket is active and unused', 'Ready for redemption'].map((check) => <li key={check} className="flex items-center gap-2 text-[12px]" style={{ color: 'var(--text-secondary)' }}><CheckCircle2 size={14} style={{ color: 'var(--success)' }} />{check}</li>)}
+              </ul>
             </div>
-            <div className="flex justify-between items-center text-[13px]">
-              <span style={{ color: 'var(--text-muted)' }}>Date</span>
-              <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>
-                {ticket.eventData?.startDate
-                  ? new Date(ticket.eventData.startDate).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric',
-                    })
-                  : 'TBD'}
-              </span>
+          </section>
+
+          <aside className="space-y-4 lg:sticky lg:top-8">
+            <div className="dp-surface p-5 sm:p-6">
+              <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em]" style={{ color: 'var(--text-muted)' }}>Confirm admission</p>
+              <p className="mb-5 text-[13px] leading-6" style={{ color: 'var(--text-secondary)' }}>Redeeming this pass records the guest’s entry on the blockchain. This action is final.</p>
+              {error && <div className="mb-4 rounded-lg p-3" style={{ backgroundColor: 'var(--error-muted)', borderLeft: '3px solid var(--error)' }}><p className="text-[13px] font-medium" style={{ color: 'var(--error)' }}>{error.message || 'Redemption failed'}</p></div>}
+              <div className="space-y-3">
+                <button onClick={handleRedeem} disabled={isPending || isConfirming} className="dp-btn-primary w-full text-[15px] py-4">{isPending || isConfirming ? <span className="flex items-center justify-center gap-2"><Clock size={16} className="animate-spin" />{isPending ? 'Confirm in Wallet...' : 'Redeeming...'}</span> : <span className="flex items-center justify-center gap-2"><CheckCircle2 size={18} />Redeem & Allow Entry</span>}</button>
+                <button onClick={() => router.push('/gate')} className="dp-btn-secondary w-full">Cancel & Go Back</button>
+              </div>
+              <div className="mt-5 flex items-start gap-3 border-t pt-4" style={{ borderColor: 'var(--border)' }}><AlertTriangle size={17} className="mt-0.5 shrink-0" style={{ color: 'var(--warning)' }} /><p className="text-[12px] leading-5" style={{ color: 'var(--text-secondary)' }}>This action cannot be undone. The ticket will be marked as used.</p></div>
             </div>
-            <div className="flex justify-between items-center text-[13px]">
-              <span style={{ color: 'var(--text-muted)' }}>Original Price</span>
-              <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>
-                {formatEther(ticket.originalPrice)} POL
-              </span>
-            </div>
-          </div>
-
-          <div className="pt-4 border-t" style={{ borderColor: 'var(--border)' }}>
-            <p className="text-[11px] uppercase tracking-wider mb-2" style={{ color: 'var(--text-muted)' }}>
-              Ticket Holder
-            </p>
-            <p className="font-mono text-[12px] break-all" style={{ color: 'var(--text-secondary)' }}>
-              {ticket.owner}
-            </p>
-          </div>
-        </div>
-
-        {/* Verification Status */}
-        <div className="dp-surface p-6 mb-6">
-          <h3 className="text-[16px] font-semibold mb-4 flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
-            <CheckCircle2 size={20} style={{ color: 'var(--success)' }} />
-            Verification Complete
-          </h3>
-          <ul className="space-y-2 text-[13px]">
-            <li className="flex items-center gap-2">
-              <CheckCircle2 size={16} style={{ color: 'var(--success)' }} />
-              <span style={{ color: 'var(--text-secondary)' }}>QR code validated</span>
-            </li>
-            <li className="flex items-center gap-2">
-              <CheckCircle2 size={16} style={{ color: 'var(--success)' }} />
-              <span style={{ color: 'var(--text-secondary)' }}>Ownership confirmed</span>
-            </li>
-            <li className="flex items-center gap-2">
-              <CheckCircle2 size={16} style={{ color: 'var(--success)' }} />
-              <span style={{ color: 'var(--text-secondary)' }}>Ticket is active and unused</span>
-            </li>
-            <li className="flex items-center gap-2">
-              <CheckCircle2 size={16} style={{ color: 'var(--success)' }} />
-              <span style={{ color: 'var(--text-secondary)' }}>Ready for redemption</span>
-            </li>
-          </ul>
-        </div>
-
-        {/* Error Display */}
-        {error && (
-          <div className="mb-6 p-4 rounded-lg" style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', borderLeft: '3px solid var(--danger)' }}>
-            <p className="text-[13px] font-medium" style={{ color: 'var(--danger)' }}>
-              {error.message || 'Redemption failed'}
-            </p>
-          </div>
-        )}
-
-        {/* Actions */}
-        <div className="space-y-3">
-          <button
-            onClick={handleRedeem}
-            disabled={isPending || isConfirming}
-            className="dp-btn-primary w-full text-[15px] py-4"
-          >
-            {isPending || isConfirming ? (
-              <span className="flex items-center justify-center gap-2">
-                <Clock size={16} className="animate-spin" />
-                {isPending ? 'Confirm in Wallet...' : 'Redeeming...'}
-              </span>
-            ) : (
-              <span className="flex items-center justify-center gap-2">
-                <CheckCircle2 size={18} />
-                Redeem & Allow Entry
-              </span>
-            )}
-          </button>
-
-          <button
-            onClick={() => router.push('/gate')}
-            className="w-full text-[14px] py-3 rounded-lg transition-all"
-            style={{
-              backgroundColor: 'var(--surface)',
-              color: 'var(--text-secondary)',
-              border: '1px solid var(--border)',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = 'var(--surface-hover)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'var(--surface)';
-            }}
-          >
-            Cancel & Go Back
-          </button>
-        </div>
-
-        {/* Warning */}
-        <div className="mt-6 p-4 rounded-lg flex items-start gap-3" style={{ backgroundColor: 'rgba(234, 179, 8, 0.1)', border: '1px solid rgba(234, 179, 8, 0.2)' }}>
-          <AlertTriangle size={18} style={{ color: '#eab308', flexShrink: 0, marginTop: '2px' }} />
-          <p className="text-[12px]" style={{ color: '#eab308' }}>
-            This action cannot be undone. The ticket will be marked as used.
-          </p>
-        </div>
-
-        {/* Gate Officer Info */}
-        <div className="mt-6 p-4 rounded-lg text-center" style={{ backgroundColor: 'var(--surface)' }}>
-          <p className="text-[11px] uppercase tracking-wider mb-1" style={{ color: 'var(--text-muted)' }}>
-            Gate Officer
-          </p>
-          <p className="font-mono text-[11px]" style={{ color: 'var(--text-secondary)' }}>
-            {address}
-          </p>
+            <div className="rounded-xl border px-4 py-4" style={{ borderColor: 'var(--border)', backgroundColor: 'var(--surface)' }}><p className="mb-2 text-[10px] uppercase tracking-[0.14em]" style={{ color: 'var(--text-muted)' }}>Gate officer</p><p className="dp-mono break-all text-[11px]" style={{ color: 'var(--text-secondary)' }}>{address}</p></div>
+          </aside>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

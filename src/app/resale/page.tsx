@@ -137,24 +137,15 @@ export default function ResaleMarketplacePage() {
   };
 
   return (
-    <div className="min-h-screen pt-[72px] pb-16 px-4">
-      <div className="dp-container">
-        {/* Header */}
-        <div className="mb-8">
-          <button
-            onClick={() => router.push('/')}
-            className="dp-btn-ghost mb-4"
-            style={{ padding: '4px 0', color: 'var(--text-muted)' }}
-          >
-            <ArrowLeft size={14} /> Home
-          </button>
-          <h1 className="text-[28px] md:text-[32px] font-semibold tracking-[-0.03em] mb-2">
-            Resale Marketplace
-          </h1>
-          <p className="text-[15px]" style={{ color: 'var(--text-secondary)' }}>
-            Buy tickets from verified owners with smart contract escrow.
-          </p>
-        </div>
+    <main className="min-h-screen px-4 pb-20 pt-24 md:pt-28">
+      <div className="dp-container max-w-6xl">
+        <header className="mb-10 border-b pb-8" style={{ borderColor: 'var(--border)' }}>
+          <button onClick={() => router.push('/')} className="dp-btn-ghost mb-8" style={{ padding: '4px 0', color: 'var(--text-muted)' }}><ArrowLeft size={14} /> Back home</button>
+          <div className="grid gap-8 md:grid-cols-[1fr_auto] md:items-end">
+            <div><p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: 'var(--accent)' }}>Community exchange · smart contract resale</p><h1 className="max-w-3xl text-4xl font-semibold leading-[1.02] tracking-[-0.055em] md:text-6xl">The next seat<br className="hidden sm:block" /> is already out there.</h1><p className="mt-4 max-w-xl text-[15px] leading-7" style={{ color: 'var(--text-secondary)' }}>Browse verified tickets from fans. Transparent pricing and contract-enforced limits keep the exchange fair.</p></div>
+            <div className="max-w-xs border-l-2 pl-4" style={{ borderColor: 'var(--accent)' }}><p className="text-sm font-semibold">Fair by default</p><p className="mt-1 text-xs leading-5" style={{ color: 'var(--text-muted)' }}>Resale price caps are enforced by the event’s smart contract—not a promise.</p></div>
+          </div>
+        </header>
 
         {/* Price cap notice */}
         <div className="dp-protocol-rule mb-8 flex items-center gap-3">
@@ -219,7 +210,7 @@ export default function ResaleMarketplacePage() {
         {!loading && sortedListings.length > 0 && (
           <div className="space-y-2">
             {/* Table header */}
-            <div className="grid grid-cols-12 gap-4 px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.06em]" style={{ color: 'var(--text-muted)' }}>
+            <div className="hidden grid-cols-12 gap-4 px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.06em] md:grid" style={{ color: 'var(--text-muted)' }}>
               <div className="col-span-4">Event</div>
               <div className="col-span-2">Seller</div>
               <div className="col-span-2 text-right">Original</div>
@@ -232,10 +223,10 @@ export default function ResaleMarketplacePage() {
               <div
                 key={listing.tokenId}
                 onClick={() => router.push(`/resale/${listing.tokenId}`)}
-                className="dp-surface-interactive grid grid-cols-12 gap-4 items-center px-5 py-4 cursor-pointer"
+                className="dp-surface-interactive grid grid-cols-1 gap-3 px-4 py-4 cursor-pointer sm:grid-cols-2 md:grid-cols-12 md:items-center md:px-5"
               >
                 {/* Event */}
-                <div className="col-span-4">
+                <div className="col-span-1 md:col-span-4">
                   <p className="text-[14px] font-medium truncate">
                     {listing.eventTitle || `Event #${listing.eventId}`}
                   </p>
@@ -254,7 +245,7 @@ export default function ResaleMarketplacePage() {
                 </div>
 
                 {/* Seller */}
-                <div className="col-span-2">
+                <div className="col-span-1 md:col-span-2">
                   <div className="flex items-center gap-1.5">
                     <CheckCircle2 size={11} style={{ color: 'var(--success)' }} />
                     <span className="dp-mono text-[12px]" style={{ color: 'var(--text-secondary)' }}>
@@ -264,26 +255,26 @@ export default function ResaleMarketplacePage() {
                 </div>
 
                 {/* Original Price */}
-                <div className="col-span-2 text-right">
+                <div className="col-span-1 text-left md:col-span-2 md:text-right">
                   <p className="text-[13px]" style={{ color: 'var(--text-muted)' }}>
                     {formatEther(listing.originalPrice)} ETH
                   </p>
                 </div>
 
                 {/* Resale Price */}
-                <div className="col-span-2 text-right">
+                <div className="col-span-1 text-left md:col-span-2 md:text-right">
                   <p className="text-[14px] font-semibold">
                     {formatEther(listing.price)} ETH
                   </p>
                 </div>
 
                 {/* Markup */}
-                <div className="col-span-1 text-right text-[13px] font-medium">
+                <div className="col-span-1 text-left text-[13px] font-medium md:text-right">
                   {getMarkupDisplay(listing)}
                 </div>
 
                 {/* Action */}
-                <div className="col-span-1 text-right">
+                <div className="col-span-1 flex justify-end md:text-right">
                   <ArrowUpRight size={14} style={{ color: 'var(--text-muted)' }} />
                 </div>
               </div>
@@ -308,6 +299,6 @@ export default function ResaleMarketplacePage() {
           </div>
         )}
       </div>
-    </div>
+    </main>
   );
 }

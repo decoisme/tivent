@@ -239,22 +239,14 @@ export default function TicketQRPage() {
   }
 
   return (
-    <div className="min-h-screen pt-[72px] pb-16 px-4">
-      <div className="dp-container max-w-[480px]">
-        {/* Back */}
-        <button
-          onClick={() => router.push(`/tickets/${tokenId}`)}
-          className="dp-btn-ghost mb-6"
-          style={{ padding: '4px 0', color: 'var(--text-muted)' }}
-        >
-          <ArrowLeft size={14} /> Back to Ticket
-        </button>
-
-        {/* Digital Pass Card */}
-        <div className="dp-surface overflow-hidden">
+    <main className="min-h-screen px-4 pb-16 pt-24 md:pt-28">
+      <div className="dp-container mx-auto max-w-xl">
+        <button onClick={() => router.push(`/tickets/${tokenId}`)} className="dp-btn-ghost mb-7" style={{ padding: '4px 0', color: 'var(--text-muted)' }}><ArrowLeft size={14} /> Return to pass</button>
+        <div className="mb-5 text-center"><p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.2em]" style={{ color: 'var(--accent)' }}>Tivent · live entry credential</p><h1 className="text-3xl font-semibold tracking-[-0.04em]">Your entry pass</h1><p className="mt-2 text-sm" style={{ color: 'var(--text-secondary)' }}>Have this screen ready at the door.</p></div>
+        <div className="dp-surface overflow-hidden rounded-2xl">
           {/* Pass header */}
-          <div className="p-6 pb-4">
-            <div className="flex items-center justify-between mb-1">
+          <div className="p-6 pb-5 sm:p-7">
+            <div className="mb-2 flex items-center justify-between">
               <p className="text-[11px] font-semibold uppercase tracking-[0.06em]" style={{ color: 'var(--accent)' }}>
                 Entry Pass
               </p>
@@ -281,9 +273,10 @@ export default function TicketQRPage() {
           <hr className="dp-divider" />
 
           {/* QR Code - visual centerpiece */}
-          <div className="p-8 flex flex-col items-center">
+          <div className="flex flex-col items-center bg-[var(--surface-elevated)] px-5 py-8 sm:px-8">
+            <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.16em]" style={{ color: 'var(--text-muted)' }}>Scan to validate · ticket #{ticket.tokenId}</p>
             <div
-              className="w-full max-w-[280px] aspect-square rounded-xl p-6 flex items-center justify-center mb-6"
+              className="mb-6 flex aspect-square w-full max-w-[300px] items-center justify-center rounded-2xl border-[10px] border-white bg-white p-5 shadow-2xl"
               style={{ backgroundColor: '#ffffff' }}
             >
               {qrCode ? (
@@ -365,6 +358,6 @@ export default function TicketQRPage() {
           </p>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

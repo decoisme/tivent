@@ -122,25 +122,26 @@ export default function WalletFraudDetailPage() {
   }
 
   return (
-    <div className="min-h-screen py-12 px-4">
-      <div className="container mx-auto max-w-6xl">
+    <div className="min-h-screen pt-24 pb-20 px-4">
+      <div className="dp-container max-w-[1200px]">
         {/* Back Button */}
         <button
           onClick={() => router.push('/admin/fraud')}
-          className="text-muted-foreground hover:text-foreground mb-6 flex items-center gap-2"
+          className="dp-btn-ghost mb-7"
         >
-          ← Back to Fraud Management
+          ‹  Back to Fraud Management
         </button>
 
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Wallet Investigation</h1>
-          <p className="text-muted-foreground font-mono break-all">
+        <div className="mb-9 border-b pb-7" style={{ borderColor: 'var(--border)' }}>
+          <p className="text-[10px] uppercase tracking-[0.2em] font-semibold mb-3" style={{ color: 'var(--accent)' }}>ADMIN / FRAUD INTELLIGENCE</p>
+          <h1 className="text-[32px] md:text-[44px] font-semibold tracking-[-0.04em] mb-3">Wallet Investigation</h1>
+          <p className="dp-mono text-[13px] md:text-[14px] break-all" style={{ color: 'var(--text-secondary)' }}>
             {targetAddress}
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-start">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
             {/* Risk Assessment */}
@@ -150,32 +151,32 @@ export default function WalletFraudDetailPage() {
 
             {/* Activity Summary */}
             {!loading && activity && (
-              <div className="glass rounded-xl p-6">
-                <h2 className="text-2xl font-semibold mb-6">Activity Summary</h2>
+              <div className="dp-surface p-5 md:p-7">
+                <h2 className="text-[18px] font-semibold mb-5">Activity Summary</h2>
                 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="p-4 bg-muted/50 rounded-lg">
-                    <p className="text-sm text-muted-foreground mb-1">Purchases</p>
-                    <p className="text-2xl font-bold">{activity.purchases}</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-4 rounded-xl" style={{ backgroundColor: 'var(--surface-elevated)' }}>
+                    <p className="text-[12px] mb-1" style={{ color: 'var(--text-muted)' }}>Purchases</p>
+                    <p className="text-[24px] font-semibold">{activity.purchases}</p>
                   </div>
 
-                  <div className="p-4 bg-muted/50 rounded-lg">
-                    <p className="text-sm text-muted-foreground mb-1">Resales</p>
-                    <p className="text-2xl font-bold">{activity.resales}</p>
+                  <div className="p-4 rounded-xl" style={{ backgroundColor: 'var(--surface-elevated)' }}>
+                    <p className="text-[12px] mb-1" style={{ color: 'var(--text-muted)' }}>Resales</p>
+                    <p className="text-[24px] font-semibold">{activity.resales}</p>
                   </div>
 
-                  <div className="p-4 bg-muted/50 rounded-lg">
-                    <p className="text-sm text-muted-foreground mb-1">Active Listings</p>
-                    <p className="text-2xl font-bold">{activity.listings}</p>
+                  <div className="p-4 rounded-xl" style={{ backgroundColor: 'var(--surface-elevated)' }}>
+                    <p className="text-[12px] mb-1" style={{ color: 'var(--text-muted)' }}>Active Listings</p>
+                    <p className="text-[24px] font-semibold">{activity.listings}</p>
                   </div>
 
-                  <div className="p-4 bg-muted/50 rounded-lg">
-                    <p className="text-sm text-muted-foreground mb-1">Account Age</p>
-                    <p className="text-lg font-bold">{activity.accountAge}</p>
+                  <div className="p-4 rounded-xl" style={{ backgroundColor: 'var(--surface-elevated)' }}>
+                    <p className="text-[12px] mb-1" style={{ color: 'var(--text-muted)' }}>Account Age</p>
+                    <p className="text-[16px] font-semibold">{activity.accountAge}</p>
                   </div>
                 </div>
 
-                <div className="mt-4 pt-4 border-t border-border">
+                <div className="mt-4 pt-4 border-t" style={{ borderColor: 'var(--border)' }}>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">Resale Ratio:</span>
                     <span className="font-semibold">
@@ -189,15 +190,15 @@ export default function WalletFraudDetailPage() {
             )}
 
             {/* Fraud Flags History */}
-            <div className="glass rounded-xl p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-semibold">Fraud Flags History</h2>
+            <div className="dp-surface p-5 md:p-7">
+              <div className="flex items-center justify-between mb-6 gap-3">
+                <h2 className="text-[18px] font-semibold">Fraud Flags History</h2>
                 <button
                   onClick={() => {
                     refreshFlags();
                     refreshRisk();
                   }}
-                  className="px-4 py-2 rounded-lg glass hover:glass-hover transition-all text-sm"
+                  className="dp-btn-secondary text-[12px]"
                 >
                   🔄 Refresh
                 </button>
@@ -218,28 +219,28 @@ export default function WalletFraudDetailPage() {
                   {flags.map((flag: any) => (
                     <div
                       key={flag.id}
-                      className={`p-4 rounded-lg border ${
-                        flag.is_resolved
-                          ? 'bg-green-500/5 border-green-500/20'
-                          : 'bg-red-500/5 border-red-500/20'
-                      }`}
+                      className="p-4 md:p-5 rounded-xl border"
+                      style={{
+                        backgroundColor: flag.is_resolved ? 'var(--success-muted)' : 'var(--error-muted)',
+                        borderColor: flag.is_resolved ? 'var(--success)' : 'var(--error)',
+                      }}
                     >
-                      <div className="flex items-start justify-between mb-2">
+                      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-3">
                         <div>
                           <p className="font-semibold capitalize">
                             {flag.flag_type.replace(/_/g, ' ')}
                           </p>
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>
                             Risk Score: {flag.risk_score}/100 ({flag.risk_level})
                           </p>
                         </div>
-                        <div className="text-right">
+                        <div className="sm:text-right">
                           {flag.is_resolved ? (
-                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-500/20 text-green-400">
+                            <span className="dp-badge dp-badge-active">
                               ✓ Resolved
                             </span>
                           ) : (
-                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-500/20 text-red-400 flex items-center gap-1">
+                            <span className="dp-badge dp-badge-expired flex items-center gap-1">
                               <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                               </svg>
@@ -249,9 +250,9 @@ export default function WalletFraudDetailPage() {
                         </div>
                       </div>
 
-                      <p className="text-sm text-muted-foreground mb-3">{flag.reason}</p>
+                      <p className="text-[13px] mb-3" style={{ color: 'var(--text-secondary)' }}>{flag.reason}</p>
 
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px]" style={{ color: 'var(--text-muted)' }}>
                         <span>
                           Flagged: {new Date(flag.flagged_at).toLocaleDateString()}
                         </span>
@@ -273,12 +274,13 @@ export default function WalletFraudDetailPage() {
 
           {/* Sidebar - Quick Actions */}
           <div className="lg:col-span-1">
-            <div className="glass rounded-xl p-6 sticky top-24 space-y-4">
-              <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
+            <div className="dp-surface p-5 md:p-6 lg:sticky lg:top-24 space-y-3">
+              <p className="text-[10px] uppercase tracking-[0.18em] mb-2" style={{ color: 'var(--accent)' }}>Investigation</p>
+              <h2 className="text-[18px] font-semibold mb-4">Quick Actions</h2>
 
               <button
                 onClick={() => window.open(`https://etherscan.io/address/${targetAddress}`, '_blank')}
-                className="w-full px-4 py-3 rounded-lg glass hover:glass-hover transition-all text-sm flex items-center justify-between"
+                className="dp-btn-secondary w-full justify-between text-[13px]"
               >
                 <span>View on Etherscan</span>
                 <span>↗</span>
@@ -289,7 +291,7 @@ export default function WalletFraudDetailPage() {
                   navigator.clipboard.writeText(targetAddress);
                   alert('Address copied!');
                 }}
-                className="w-full px-4 py-3 rounded-lg glass hover:glass-hover transition-all text-sm flex items-center justify-between"
+                className="dp-btn-secondary w-full justify-between text-[13px]"
               >
                 <span>Copy Address</span>
                 <span>📋</span>
@@ -297,22 +299,22 @@ export default function WalletFraudDetailPage() {
 
               <button
                 onClick={() => refreshRisk()}
-                className="w-full px-4 py-3 rounded-lg glass hover:glass-hover transition-all text-sm flex items-center justify-between"
+                className="dp-btn-secondary w-full justify-between text-[13px]"
               >
                 <span>Recalculate Risk</span>
                 <span>🔄</span>
               </button>
 
-              <div className="pt-4 border-t border-border">
-                <p className="text-xs text-muted-foreground mb-2">Investigation Tools:</p>
+              <div className="pt-4 border-t" style={{ borderColor: 'var(--border)' }}>
+                <p className="text-[11px] mb-2" style={{ color: 'var(--text-muted)' }}>Investigation Tools:</p>
                 <div className="space-y-2">
-                  <button className="w-full px-3 py-2 rounded-lg bg-muted hover:bg-muted/80 transition-all text-xs text-left">
+                  <button className="dp-btn-ghost w-full justify-start text-[12px]">
                     View Transaction History
                   </button>
-                  <button className="w-full px-3 py-2 rounded-lg bg-muted hover:bg-muted/80 transition-all text-xs text-left">
+                  <button className="dp-btn-ghost w-full justify-start text-[12px]">
                     View Owned Tickets
                   </button>
-                  <button className="w-full px-3 py-2 rounded-lg bg-muted hover:bg-muted/80 transition-all text-xs text-left">
+                  <button className="dp-btn-ghost w-full justify-start text-[12px]">
                     View Resale History
                   </button>
                 </div>

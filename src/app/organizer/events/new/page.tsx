@@ -332,8 +332,8 @@ export default function CreateEventPage() {
   const highestPrice = Math.max(...ticketTypes.map(t => parseFloat(t.priceIDR) || 0));
 
   return (
-    <div className="min-h-screen pt-[72px] pb-16 px-4">
-      <div className="dp-container max-w-[1200px]">
+    <div className="min-h-screen pt-24 pb-20 px-4">
+      <div className="dp-container max-w-[1240px]">
         {/* Header */}
         <button
           onClick={() => router.back()}
@@ -343,8 +343,9 @@ export default function CreateEventPage() {
           <ArrowLeft size={14} /> Back
         </button>
 
-        <div className="mb-8">
-          <h1 className="text-[28px] md:text-[32px] font-semibold tracking-[-0.03em] mb-2">
+        <div className="mb-9 border-b pb-7" style={{ borderColor: 'var(--border)' }}>
+          <p className="text-[10px] uppercase tracking-[0.2em] font-semibold mb-3" style={{ color: 'var(--accent)' }}>ORGANIZER / EVENT SETUP</p>
+          <h1 className="text-[32px] md:text-[44px] font-semibold tracking-[-0.04em] mb-3">
             Create New Event
           </h1>
           <p className="text-[15px]" style={{ color: 'var(--text-secondary)' }}>
@@ -352,13 +353,13 @@ export default function CreateEventPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 lg:gap-7 items-start">
           {/* Main Form */}
           <div className="lg:col-span-2 space-y-6">
             <form onSubmit={handleSubmit} className="space-y-6" id="create-event-form">
               {/* Basic Information */}
-              <div className="dp-surface p-6">
-                <div className="flex items-center gap-2 mb-5">
+              <div className="dp-surface p-5 md:p-7">
+                <div className="flex items-center gap-3 mb-6 border-b pb-4" style={{ borderColor: 'var(--border)' }}>
                   <FileText size={16} style={{ color: 'var(--accent)' }} />
                   <h2 className="text-[16px] font-semibold">Basic Information</h2>
                 </div>
@@ -446,8 +447,8 @@ export default function CreateEventPage() {
               </div>
 
               {/* Date & Time */}
-              <div className="dp-surface p-6">
-                <div className="flex items-center gap-2 mb-5">
+              <div className="dp-surface p-5 md:p-7">
+                <div className="flex items-center gap-3 mb-6 border-b pb-4" style={{ borderColor: 'var(--border)' }}>
                   <Calendar size={16} style={{ color: 'var(--accent)' }} />
                   <h2 className="text-[16px] font-semibold">Date & Time</h2>
                 </div>
@@ -540,8 +541,8 @@ export default function CreateEventPage() {
               </div>
 
               {/* Ticket Types */}
-              <div className="dp-surface p-6">
-                <div className="flex items-start justify-between mb-5">
+              <div className="dp-surface p-5 md:p-7">
+                <div className="flex items-start justify-between mb-5 border-b pb-4 gap-3" style={{ borderColor: 'var(--border)' }}>
                   <div className="flex items-start gap-2">
                     <Ticket size={16} style={{ color: 'var(--accent)' }} className="mt-0.5" />
                     <div>
@@ -710,8 +711,8 @@ export default function CreateEventPage() {
               </div>
 
               {/* Anti-Scalping Rules */}
-              <div className="dp-surface p-6">
-                <div className="flex items-center gap-2 mb-5">
+              <div className="dp-surface p-5 md:p-7">
+                <div className="flex items-center gap-3 mb-6 border-b pb-4" style={{ borderColor: 'var(--border)' }}>
                   <Shield size={16} style={{ color: 'var(--accent)' }} />
                   <h2 className="text-[16px] font-semibold">Anti-Scalping Protection</h2>
                 </div>
@@ -759,7 +760,7 @@ export default function CreateEventPage() {
 
           {/* Sidebar Summary */}
           <div className="lg:col-span-1">
-            <div className="dp-surface p-6 sticky top-[88px] space-y-5">
+            <div className="dp-surface p-5 md:p-6 lg:sticky lg:top-24 space-y-5">
               <div>
                 <h3 className="text-[15px] font-semibold mb-4">Event Summary</h3>
                 

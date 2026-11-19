@@ -37,10 +37,10 @@ export default function PartnerPage() {
   };
 
   return (
-    <main className="min-h-screen py-20 px-4" style={{ backgroundColor: 'var(--bg)' }}>
+    <main className="min-h-screen pt-24 pb-20 px-4" style={{ backgroundColor: 'var(--bg)' }}>
       <div className="dp-container max-w-6xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-16">
+        <div className="text-center mb-14 max-w-3xl mx-auto">
           <div className="inline-flex items-center gap-2 mb-4 px-4 py-2 rounded-full" style={{ backgroundColor: 'var(--accent-subtle)' }}>
             <Sparkles size={16} style={{ color: 'var(--accent)' }} />
             <span className="text-[12px] font-medium uppercase tracking-wider" style={{ color: 'var(--accent)' }}>
@@ -48,7 +48,7 @@ export default function PartnerPage() {
             </span>
           </div>
           
-          <h1 className="text-[48px] font-semibold tracking-[-0.03em] mb-4" style={{ color: 'var(--text-primary)' }}>
+          <h1 className="text-[40px] md:text-[56px] font-semibold tracking-[-0.05em] mb-5" style={{ color: 'var(--text-primary)' }}>
             Partner with Us
           </h1>
           
@@ -59,10 +59,10 @@ export default function PartnerPage() {
         </div>
 
         {/* Role Cards */}
-        <div className="grid md:grid-cols-2 gap-8 mb-16">
+        <div className="grid md:grid-cols-2 gap-4 md:gap-5 mb-16">
           {/* Event Organizer Card */}
           <div 
-            className="dp-surface p-8 border-2 transition-all cursor-pointer hover:scale-[1.02]"
+            className="dp-surface p-6 md:p-8 border-2 transition-all cursor-pointer hover:-translate-y-1 flex flex-col"
             style={{ 
               borderColor: selectedRole === 'organizer' ? 'var(--accent)' : 'var(--border)',
             }}
@@ -73,7 +73,7 @@ export default function PartnerPage() {
                 <Building2 size={24} style={{ color: 'var(--accent)' }} />
               </div>
               <div>
-                <h3 className="text-[24px] font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>
+                <h3 className="text-[22px] md:text-[26px] font-semibold tracking-[-0.03em] mb-1" style={{ color: 'var(--text-primary)' }}>
                   Event Organizer
                 </h3>
                 <p className="text-[13px]" style={{ color: 'var(--text-muted)' }}>
@@ -88,7 +88,7 @@ export default function PartnerPage() {
             </p>
 
             {/* Features */}
-            <div className="space-y-3 mb-6">
+            <div className="space-y-3 mb-7 flex-1">
               <div className="flex items-center gap-3">
                 <CheckCircle2 size={18} style={{ color: 'var(--success)' }} />
                 <span className="text-[13px]" style={{ color: 'var(--text-secondary)' }}>
@@ -135,7 +135,7 @@ export default function PartnerPage() {
 
           {/* Gate Officer Card */}
           <div 
-            className="dp-surface p-8 border-2 transition-all cursor-pointer hover:scale-[1.02]"
+            className="dp-surface p-6 md:p-8 border-2 transition-all cursor-pointer hover:-translate-y-1 flex flex-col"
             style={{ 
               borderColor: selectedRole === 'gate-officer' ? 'var(--accent)' : 'var(--border)',
             }}
@@ -146,7 +146,7 @@ export default function PartnerPage() {
                 <Shield size={24} style={{ color: 'var(--accent)' }} />
               </div>
               <div>
-                <h3 className="text-[24px] font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>
+                <h3 className="text-[22px] md:text-[26px] font-semibold tracking-[-0.03em] mb-1" style={{ color: 'var(--text-primary)' }}>
                   Gate Officer
                 </h3>
                 <p className="text-[13px]" style={{ color: 'var(--text-muted)' }}>
@@ -161,7 +161,7 @@ export default function PartnerPage() {
             </p>
 
             {/* Features */}
-            <div className="space-y-3 mb-6">
+            <div className="space-y-3 mb-7 flex-1">
               <div className="flex items-center gap-3">
                 <CheckCircle2 size={18} style={{ color: 'var(--success)' }} />
                 <span className="text-[13px]" style={{ color: 'var(--text-secondary)' }}>
@@ -221,14 +221,15 @@ export default function PartnerPage() {
         </div>
 
         {/* How It Works */}
-        <div className="text-center mb-12">
+        <div className="text-center mb-14">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] mb-3" style={{ color: 'var(--accent)' }}>Getting Started</p>
           <h2 className="text-[32px] font-semibold tracking-[-0.03em] mb-8" style={{ color: 'var(--text-primary)' }}>
             How It Works
           </h2>
           
           <div className="grid md:grid-cols-3 gap-8">
             {/* Step 1 */}
-            <div className="text-center">
+            <div className="dp-surface p-5 md:p-6 text-center">
               <div className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center text-[20px] font-bold" style={{ backgroundColor: 'var(--accent-subtle)', color: 'var(--accent)' }}>
                 1
               </div>
@@ -241,7 +242,7 @@ export default function PartnerPage() {
             </div>
 
             {/* Step 2 */}
-            <div className="text-center">
+            <div className="dp-surface p-5 md:p-6 text-center">
               <div className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center text-[20px] font-bold" style={{ backgroundColor: 'var(--accent-subtle)', color: 'var(--accent)' }}>
                 2
               </div>
@@ -254,7 +255,7 @@ export default function PartnerPage() {
             </div>
 
             {/* Step 3 */}
-            <div className="text-center">
+            <div className="dp-surface p-5 md:p-6 text-center">
               <div className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center text-[20px] font-bold" style={{ backgroundColor: 'var(--accent-subtle)', color: 'var(--accent)' }}>
                 3
               </div>
@@ -269,12 +270,12 @@ export default function PartnerPage() {
         </div>
 
         {/* Stats */}
-        <div className="dp-surface p-8 mb-12">
+        <div className="dp-surface p-6 md:p-9 mb-12">
           <h2 className="text-[24px] font-semibold tracking-[-0.03em] mb-6 text-center" style={{ color: 'var(--text-primary)' }}>
             Why Partner with Tivent?
           </h2>
           
-          <div className="grid md:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
             <div className="text-center">
               <Users size={32} className="mx-auto mb-3" style={{ color: 'var(--accent)' }} />
               <div className="text-[28px] font-bold mb-1" style={{ color: 'var(--text-primary)' }}>

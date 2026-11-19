@@ -9,28 +9,21 @@ export default function DemoTicketPage() {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen py-24 px-4" style={{ backgroundColor: 'var(--bg)' }}>
-      <div className="dp-container max-w-4xl">
-        {/* Back Button */}
-        <button 
-          onClick={() => router.back()} 
-          className="dp-btn-ghost mb-8" 
-          style={{ padding: '4px 0', color: 'var(--text-muted)' }}
-        >
-          <ArrowLeft size={14} /> Back
-        </button>
+    <main className="min-h-screen px-4 py-8 sm:px-6 sm:py-14" style={{ backgroundColor: 'var(--bg)' }}>
+      <div className="dp-container max-w-6xl mx-auto">
+        <button onClick={() => router.back()} className="dp-btn-ghost mb-8" style={{ padding: '4px 0', color: 'var(--text-muted)' }}><ArrowLeft size={14} /> Back to previous page</button>
+        <header className="mb-9 border-b pb-7" style={{ borderColor: 'var(--border)' }}>
+          <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: 'var(--accent)' }}>Tivent / Design lab</p>
+          <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end"><div><h1 className="text-4xl font-semibold tracking-tighter sm:text-5xl">Tickets with a little magic<span style={{ color: 'var(--accent)' }}>.</span></h1><p className="mt-3 max-w-2xl text-[14px] leading-6" style={{ color: 'var(--text-secondary)' }}>A collection of live holographic ticket treatments. Hover each pass to explore its depth, light and motion.</p></div><span className="dp-mono text-[11px] uppercase tracking-[0.14em]" style={{ color: 'var(--text-muted)' }}>WebGL specimen / 01—04</span></div>
+        </header>
 
-        <div className="text-center mb-12">
-          <h1 className="text-[32px] font-semibold tracking-[-0.02em] mb-3">
-            3D Holographic Ticket
-          </h1>
-          <p className="text-[14px]" style={{ color: 'var(--text-secondary)' }}>
-            Move your cursor over the ticket to experience dynamic 3D tilt and holographic effects
-          </p>
-        </div>
-
-        {/* Demo Tickets Grid */}
-        <div className="grid gap-12 mb-12">
+        <div className="grid items-start gap-6 lg:grid-cols-[220px_minmax(0,1fr)]">
+          <aside className="dp-surface p-5 lg:sticky lg:top-8">
+            <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.14em]" style={{ color: 'var(--text-muted)' }}>Collection notes</p>
+            <div className="space-y-4 text-[12px] leading-5" style={{ color: 'var(--text-secondary)' }}><p>Four unique treatments, tuned for distinct event moods.</p><p>Move your pointer over a ticket to see the holographic tilt.</p><p>Each pass adapts the same collectible format to a new palette.</p></div>
+            <div className="mt-5 border-t pt-4" style={{ borderColor: 'var(--border)' }}><p className="text-[10px] uppercase tracking-[0.12em]" style={{ color: 'var(--text-muted)' }}>Interaction</p><p className="mt-1 text-[12px]">Pointer-responsive · WebGL</p></div>
+          </aside>
+          <div className="grid gap-5 mb-12">
           {/* Example 1: Default Purple Theme */}
           <div className="flex flex-col items-center gap-4">
             <AdmitOneTicket
@@ -192,10 +185,9 @@ export default function DemoTicketPage() {
               </p>
             </div>
           </div>
-        </div>
 
         {/* Usage Info */}
-        <div className="dp-surface p-6 max-w-2xl mx-auto">
+        <div className="dp-surface p-5 sm:p-7">
           <h2 className="text-[18px] font-semibold mb-4">Integration Notes</h2>
           <ul className="space-y-2 text-[13px]" style={{ color: 'var(--text-secondary)' }}>
             <li className="flex items-start gap-2">
@@ -220,7 +212,9 @@ export default function DemoTicketPage() {
             </li>
           </ul>
         </div>
+          </div>
+        </div>
       </div>
-    </div>
+    </main>
   );
 }

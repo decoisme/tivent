@@ -111,9 +111,23 @@ function PaymentSuccessContent() {
   const needsWallet = payment.status === 'PAID_PENDING_MINT' && !payment.buyer_address;
 
   return (
-    <div className="min-h-screen pt-[72px] pb-16 px-4">
-      <div className="dp-container max-w-[600px]">
-        <div className="dp-surface p-8 text-center">
+    <main className="min-h-screen px-4 py-10 sm:px-6 sm:py-16">
+      <div className="dp-container max-w-5xl">
+        <div className="mb-8 border-b pb-6" style={{ borderColor: 'var(--border)' }}>
+          <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: 'var(--accent)' }}>Tivent · Checkout</p>
+          <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end"><div><h1 className="text-4xl font-semibold tracking-tighter sm:text-5xl">Your next story<span style={{ color: 'var(--accent)' }}>.</span></h1><p className="mt-3 max-w-lg text-[14px]" style={{ color: 'var(--text-secondary)' }}>A live view of your order, ticket issuance and what to do next.</p></div><span className="dp-mono text-[11px] uppercase tracking-[0.14em]" style={{ color: 'var(--text-muted)' }}>Order update / 01</span></div>
+        </div>
+        <div className="grid items-start gap-5 lg:grid-cols-[0.7fr_1.3fr]">
+          <aside className="dp-surface p-6 sm:p-7 lg:sticky lg:top-8">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em]" style={{ color: 'var(--text-muted)' }}>Payment reference</p>
+            <p className="dp-mono mt-3 break-all text-[13px] font-medium">{payment.invoice_id}</p>
+            <div className="my-5 border-t" style={{ borderColor: 'var(--border)' }} />
+            <p className="text-[11px] uppercase tracking-[0.14em]" style={{ color: 'var(--text-muted)' }}>Order total</p>
+            <p className="mt-2 text-3xl font-semibold tracking-[-0.04em]">Rp {payment.amount_idr?.toLocaleString('id-ID')}</p>
+            <p className="mt-2 text-[12px]" style={{ color: 'var(--text-secondary)' }}>{payment.ticket_quantity} ticket(s) · {payment.status}</p>
+            <div className="mt-6 rounded-xl p-4" style={{ backgroundColor: isPaid ? 'var(--success-muted)' : isPending ? 'var(--warning-muted)' : 'var(--error-muted)' }}><p className="text-[11px] font-semibold uppercase tracking-[0.12em]" style={{ color: isPaid ? 'var(--success)' : isPending ? 'var(--warning)' : 'var(--error)' }}>Order status</p><p className="mt-1 text-[14px] font-semibold">{isPaid ? 'Payment confirmed' : isPending ? 'Awaiting confirmation' : 'Action needed'}</p></div>
+          </aside>
+          <div className="dp-surface p-6 sm:p-8 text-center">
           {/* Success Icon */}
           <div
             className="w-20 h-20 rounded-full mx-auto mb-6 flex items-center justify-center"
@@ -329,9 +343,10 @@ function PaymentSuccessContent() {
               Taking too long? Contact support with invoice ID: {payment.invoice_id}
             </p>
           )}
+          </div>
         </div>
       </div>
-    </div>
+    </main>
   );
 }
 

@@ -222,32 +222,16 @@ export default function ResalePurchasePage() {
   const isSeller = address && listing.seller.toLowerCase() === address.toLowerCase();
 
   return (
-    <div className="min-h-screen py-8 px-4 page-enter-active" style={{ backgroundColor: 'var(--bg)' }}>
-      <div className="dp-container max-w-5xl mx-auto">
-        {/* Compact Header */}
-        <div className="flex items-center justify-between mb-6">
-          <button
-            onClick={() => router.back()}
-            className="flex items-center gap-2 text-[13px] transition-opacity hover:opacity-80"
-            style={{ color: 'var(--text-secondary)' }}
-          >
-            <ArrowLeft size={14} />
-            Back
-          </button>
+    <main className="min-h-screen px-4 pb-20 pt-24 page-enter-active md:pt-28" style={{ backgroundColor: 'var(--bg)' }}>
+      <div className="dp-container mx-auto max-w-6xl">
+        <div className="mb-8 flex items-center justify-between border-b pb-5" style={{ borderColor: 'var(--border)' }}>
+          <button onClick={() => router.back()} className="dp-btn-ghost" style={{ padding: '4px 0', color: 'var(--text-muted)' }}><ArrowLeft size={14} /> Back to exchange</button>
           <div className="flex items-center gap-2">
-            <span className="px-2 py-1 rounded text-[11px] font-medium" style={{ backgroundColor: 'rgba(168, 85, 247, 0.1)', color: '#a855f7' }}>
-              Resale
-            </span>
-            {discount > 0 && (
-              <span className="px-2 py-1 rounded text-[11px] font-medium" style={{ backgroundColor: 'rgba(34, 197, 94, 0.1)', color: 'var(--success)' }}>
-                {discount}% OFF
-              </span>
-            )}
+            <span className="rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-wider" style={{ borderColor: 'var(--border)', color: 'var(--accent)' }}>Verified resale</span>
+            {discount > 0 && <span className="rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-wider" style={{ backgroundColor: 'rgba(34, 197, 94, 0.12)', color: 'var(--success)' }}>{discount}% below face</span>}
           </div>
         </div>
-
-        {/* Compact Grid Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6 items-start">
+        <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
           {/* Main Content */}
           <div className="space-y-4">
             {/* Event Image & Title - Compact */}
@@ -475,6 +459,6 @@ export default function ResalePurchasePage() {
           </div>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

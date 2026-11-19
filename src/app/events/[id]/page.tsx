@@ -263,37 +263,30 @@ export default function EventDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen pt-[72px] pb-16 px-4">
-        <div className="dp-container max-w-[1080px]">
-          <div className="dp-skeleton h-4 w-20 mb-6" />
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2 space-y-6">
-              <div className="dp-skeleton h-[320px] rounded-xl" />
-              <div className="dp-skeleton h-[200px] rounded-xl" />
-            </div>
-            <div>
-              <div className="dp-skeleton h-[300px] rounded-xl" />
-            </div>
+      <main className="min-h-screen px-4 pb-20 pt-24 md:pt-28">
+        <div className="dp-container max-w-[1180px]">
+          <div className="dp-skeleton mb-6 h-4 w-28" />
+          <div className="dp-skeleton mb-8 h-[300px] rounded-[28px] md:h-[440px]" />
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+            <div className="space-y-5 lg:col-span-2"><div className="dp-skeleton h-48 rounded-2xl" /><div className="dp-skeleton h-56 rounded-2xl" /></div>
+            <div className="dp-skeleton h-[320px] rounded-2xl" />
           </div>
         </div>
-      </div>
+      </main>
     );
   }
 
   if (!event) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4">
-        <div className="dp-surface p-12 max-w-md w-full text-center">
-          <Ticket size={32} className="mx-auto mb-4" style={{ color: 'var(--text-muted)' }} />
-          <h2 className="text-[20px] font-semibold mb-2">Event Not Found</h2>
-          <p className="text-[14px] mb-6" style={{ color: 'var(--text-secondary)' }}>
-            The event you're looking for doesn't exist or has been removed.
-          </p>
-          <button onClick={() => router.push('/events')} className="dp-btn-primary">
-            Browse Events
-          </button>
+      <main className="flex min-h-screen items-center justify-center px-4 py-20">
+        <div className="dp-surface w-full max-w-lg rounded-3xl px-7 py-14 text-center md:px-12">
+          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl" style={{ backgroundColor: 'var(--accent-muted)', color: 'var(--accent)' }}><Ticket size={30} /></div>
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.2em]" style={{ color: 'var(--text-muted)' }}>Missing from the lineup</p>
+          <h2 className="mb-3 text-3xl font-semibold tracking-[-0.05em]">Event Not Found</h2>
+          <p className="mb-7 text-[14px]" style={{ color: 'var(--text-secondary)' }}>The event you're looking for doesn't exist or has been removed.</p>
+          <button onClick={() => router.push('/events')} className="dp-btn-primary">Browse Events</button>
         </div>
-      </div>
+      </main>
     );
   }
 
@@ -303,9 +296,8 @@ export default function EventDetailPage() {
   const soldPercentage = event.maxTickets > 0 ? (event.ticketsSold / event.maxTickets) * 100 : 0;
 
   return (
-    <div className="min-h-screen pt-[72px] pb-16 px-4">
-      <div className="dp-container max-w-[1080px]">
-        {/* Back */}
+    <main className="min-h-screen px-4 pb-20 pt-24 md:pt-28">
+      <div className="dp-container max-w-[1180px]">
         <button
           type="button"
           onClick={(e) => {
@@ -313,291 +305,115 @@ export default function EventDetailPage() {
             e.stopPropagation();
             router.push('/events');
           }}
-          className="flex items-center gap-2 text-sm mb-6 transition-colors"
+          className="mb-6 flex items-center gap-2 text-[13px] transition-colors"
           style={{ color: 'var(--text-muted)' }}
           onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--text-primary)')}
           onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
-        >
-          <ArrowLeft size={16} /> 
-          <span>Back to Events</span>
-        </button>
+        ><ArrowLeft size={15} /><span>All events</span></button>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-          {/* Left: Main Content */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Cover image */}
-            <div
-              className="h-[280px] md:h-[360px] rounded-xl flex items-center justify-center overflow-hidden"
-              style={{ backgroundColor: 'var(--surface)', border: '1px solid var(--border)' }}
-            >
-              {event.metadata?.imageUrl ? (
-                <img
-                  src={event.metadata.imageUrl}
-                  alt={event.metadata.title}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <Ticket size={48} style={{ color: 'var(--text-muted)' }} />
-              )}
+        <section className="group relative mb-8 flex min-h-[360px] items-end overflow-hidden rounded-[28px] border md:min-h-[470px]" style={{ borderColor: 'var(--border)', backgroundColor: 'var(--surface-elevated)' }}>
+          {event.metadata?.imageUrl ? (
+            <img src={event.metadata.imageUrl} alt={event.metadata.title} className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.02]" />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center" style={{ color: 'var(--text-muted)' }}><Ticket size={56} /></div>
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-black/10" />
+          <div className="relative z-10 max-w-4xl px-6 pb-8 pt-24 md:px-10 md:pb-10">
+            <div className="mb-5">
+              {event.isCancelled ? <span className="dp-badge dp-badge-expired">Event Cancelled</span> : isSoldOut ? <span className="dp-badge dp-badge-used">Sold Out</span> : event.isPrimarySaleActive ? <span className="dp-badge dp-badge-active">Tickets Available</span> : <span className="dp-badge dp-badge-used">Sale Not Active</span>}
             </div>
+            <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-white/65">Tivent presents · Event № {event.eventId}</p>
+            <h1 className="max-w-3xl text-4xl font-semibold leading-[0.98] tracking-[-0.055em] text-white md:text-6xl">{event.metadata?.title || `Event #${event.eventId}`}</h1>
+            <div className="mt-6 flex flex-col gap-3 text-[13px] text-white/80 sm:flex-row sm:flex-wrap sm:gap-x-7">
+              <span className="flex items-center gap-2"><Calendar size={15} className="text-white/60" />{event.metadata?.startDate ? formatDate(event.metadata.startDate) : 'Date TBD'}</span>
+              <span className="flex items-center gap-2"><MapPin size={15} className="text-white/60" />{event.metadata?.venue || 'Venue TBD'}</span>
+            </div>
+          </div>
+        </section>
 
-            {/* Event Info */}
-            <div>
-              {/* Status */}
-              <div className="mb-4">
-                {event.isCancelled ? (
-                  <span className="dp-badge dp-badge-expired">Event Cancelled</span>
-                ) : isSoldOut ? (
-                  <span className="dp-badge dp-badge-used">Sold Out</span>
-                ) : event.isPrimarySaleActive ? (
-                  <span className="dp-badge dp-badge-active">Tickets Available</span>
-                ) : (
-                  <span className="dp-badge dp-badge-used">Sale Not Active</span>
-                )}
-              </div>
-
-              <h1 className="text-[28px] md:text-[36px] font-semibold tracking-[-0.03em] mb-6">
-                {event.metadata?.title || `Event #${event.eventId}`}
-              </h1>
-
-              {/* Date & Venue */}
-              <div className="space-y-4 mb-8">
-                <div className="flex items-start gap-3">
-                  <Calendar size={16} className="mt-0.5 flex-shrink-0" style={{ color: 'var(--text-muted)' }} />
-                  <div>
-                    <p className="text-[14px] font-medium">Date & Time</p>
-                    <p className="text-[13px]" style={{ color: 'var(--text-secondary)' }}>
-                      {event.metadata?.startDate ? formatDate(event.metadata.startDate) : 'Date TBD'}
-                    </p>
-                  </div>
+        <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-3">
+          <div className="space-y-6 lg:col-span-2">
+            <section className="dp-surface rounded-2xl p-6 md:p-8">
+              <div className="mb-6 flex items-start justify-between gap-4">
+                <div>
+                  <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.2em]" style={{ color: 'var(--accent)' }}>The experience</p>
+                  <h2 className="text-2xl font-semibold tracking-[-0.04em]">About this event</h2>
                 </div>
-                <div className="flex items-start gap-3">
-                  <MapPin size={16} className="mt-0.5 flex-shrink-0" style={{ color: 'var(--text-muted)' }} />
-                  <div>
-                    <p className="text-[14px] font-medium">Venue</p>
-                    <p className="text-[13px]" style={{ color: 'var(--text-secondary)' }}>
-                      {event.metadata?.venue || 'Venue TBD'}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <User size={16} className="mt-0.5 flex-shrink-0" style={{ color: 'var(--text-muted)' }} />
-                  <div>
-                    <p className="text-[14px] font-medium">Organizer</p>
-                    <p className="dp-mono" style={{ color: 'var(--text-secondary)' }}>
-                      {event.organizer.slice(0, 6)}...{event.organizer.slice(-4)}
-                    </p>
-                  </div>
+                <div className="hidden shrink-0 text-right sm:block">
+                  <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: 'var(--text-muted)' }}>Presented by</p>
+                  <p className="dp-mono text-[12px]" style={{ color: 'var(--text-secondary)' }}>{event.organizer.slice(0, 6)}...{event.organizer.slice(-4)}</p>
                 </div>
               </div>
-
-              <hr className="dp-divider mb-6" />
-
-              {/* Description */}
-              <div className="mb-8">
-                <h2 className="text-[16px] font-semibold mb-3">About This Event</h2>
-                <p className="text-[14px] leading-[1.7]" style={{ color: 'var(--text-secondary)' }}>
-                  {event.metadata?.description || 'No description available.'}
-                </p>
+              <p className="text-[14px] leading-7" style={{ color: 'var(--text-secondary)' }}>{event.metadata?.description || 'No description available.'}</p>
+              <div className="mt-7 grid grid-cols-1 gap-3 border-t pt-5 sm:grid-cols-2" style={{ borderColor: 'var(--border)' }}>
+                <div className="rounded-xl p-4" style={{ backgroundColor: 'var(--surface-elevated)' }}><div className="mb-2 flex items-center gap-2" style={{ color: 'var(--accent)' }}><Calendar size={15} /><span className="text-[10px] font-semibold uppercase tracking-[0.15em]">Date & time</span></div><p className="text-[13px]" style={{ color: 'var(--text-secondary)' }}>{event.metadata?.startDate ? formatDate(event.metadata.startDate) : 'Date TBD'}</p></div>
+                <div className="rounded-xl p-4" style={{ backgroundColor: 'var(--surface-elevated)' }}><div className="mb-2 flex items-center gap-2" style={{ color: 'var(--accent)' }}><MapPin size={15} /><span className="text-[10px] font-semibold uppercase tracking-[0.15em]">Location</span></div><p className="text-[13px]" style={{ color: 'var(--text-secondary)' }}>{event.metadata?.venue || 'Venue TBD'}</p></div>
               </div>
+            </section>
 
-              {/* Ticket Types */}
-              {event.ticketTypes.length > 0 && (
-                <div className="mb-8">
-                  <h2 className="text-[16px] font-semibold mb-4">Available Ticket Types</h2>
-                  <div className="space-y-3">
-                    {event.ticketTypes.map((type) => (
-                      <div
-                        key={type.typeId}
-                        className="p-4 rounded-lg transition-all"
-                        style={{
-                          backgroundColor: 'var(--surface)',
-                          border: '1px solid var(--border)',
-                          opacity: !type.active || type.available <= 0 ? 0.6 : 1,
-                        }}
-                      >
-                        <div className="flex items-start justify-between mb-2">
-                          <div className="flex-1">
-                            <h3 className="text-[15px] font-semibold mb-1">{type.name}</h3>
-                            {type.description && (
-                              <p className="text-[12px] mb-2" style={{ color: 'var(--text-muted)' }}>
-                                {type.description}
-                              </p>
-                            )}
-                          </div>
-                          {!type.active || type.available <= 0 ? (
-                            <span className="text-[11px] px-2 py-1 rounded ml-3" style={{ backgroundColor: 'var(--error-muted)', color: 'var(--error)' }}>
-                              {!type.active ? 'Inactive' : 'Sold Out'}
-                            </span>
-                          ) : (
-                            <span className="text-[11px] px-2 py-1 rounded ml-3" style={{ backgroundColor: 'var(--success-muted)', color: 'var(--success)' }}>
-                              {type.available} left
-                            </span>
-                          )}
+            {event.ticketTypes.length > 0 && (
+              <section className="dp-surface rounded-2xl p-6 md:p-8">
+                <div className="mb-5 flex items-end justify-between gap-3">
+                  <div><p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.2em]" style={{ color: 'var(--accent)' }}>Choose your place</p><h2 className="text-2xl font-semibold tracking-[-0.04em]">Ticket types</h2></div>
+                  <span className="text-[12px]" style={{ color: 'var(--text-muted)' }}>{event.ticketTypes.length} options</span>
+                </div>
+                <div className="space-y-3">
+                  {event.ticketTypes.map((type) => (
+                    <article key={type.typeId} className="rounded-xl border p-4 transition-colors" style={{ backgroundColor: 'var(--surface-elevated)', borderColor: 'var(--border)', opacity: !type.active || type.available <= 0 ? 0.6 : 1 }}>
+                      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="min-w-0 flex-1">
+                          <div className="mb-2 flex flex-wrap items-center gap-2"><h3 className="text-[16px] font-semibold">{type.name}</h3>{!type.active || type.available <= 0 ? <span className="rounded-full px-2.5 py-1 text-[10px] font-medium" style={{ backgroundColor: 'var(--error-muted)', color: 'var(--error)' }}>{!type.active ? 'Inactive' : 'Sold Out'}</span> : <span className="rounded-full px-2.5 py-1 text-[10px] font-medium" style={{ backgroundColor: 'var(--success-muted)', color: 'var(--success)' }}>{type.available} left</span>}</div>
+                          {type.description && <p className="mb-3 text-[12px] leading-5" style={{ color: 'var(--text-muted)' }}>{type.description}</p>}
+                          <p className="text-[11px]" style={{ color: 'var(--text-secondary)' }}>{type.sold} / {type.maxSupply} sold</p>
                         </div>
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-[16px] font-semibold">{formatIDR(type.priceIDR)}</p>
-                            <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
-                              ≈ {type.pricePOL} POL
-                            </p>
-                          </div>
-                          <div className="text-right text-[12px]" style={{ color: 'var(--text-secondary)' }}>
-                            <p>{type.sold} / {type.maxSupply} sold</p>
-                          </div>
-                        </div>
+                        <div className="sm:text-right"><p className="text-xl font-semibold tracking-[-0.03em]">{formatIDR(type.priceIDR)}</p><p className="mt-1 text-[11px]" style={{ color: 'var(--text-muted)' }}>≈ {type.pricePOL} POL</p></div>
                       </div>
-                    ))}
-                  </div>
+                    </article>
+                  ))}
                 </div>
-              )}
-            </div>
+              </section>
+            )}
 
-            {/* Smart Contract Rules */}
-            <div className="dp-surface p-6">
-              <div className="flex items-center gap-2 mb-5">
-                <Lock size={14} style={{ color: 'var(--accent)' }} />
-                <h2 className="text-[15px] font-semibold">Smart Contract Rules</h2>
+            <section className="dp-surface rounded-2xl p-6 md:p-8">
+              <div className="mb-5 flex items-center gap-3"><div className="flex h-9 w-9 items-center justify-center rounded-xl" style={{ backgroundColor: 'var(--accent-muted)', color: 'var(--accent)' }}><Lock size={16} /></div><div><p className="mb-0.5 text-[10px] font-semibold uppercase tracking-[0.17em]" style={{ color: 'var(--text-muted)' }}>Built into the protocol</p><h2 className="text-[16px] font-semibold">Smart contract rules</h2></div></div>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div className="dp-protocol-rule rounded-xl p-4"><p className="mb-1 text-[10px] uppercase tracking-[0.12em]" style={{ color: 'var(--text-muted)' }}>Purchase limit</p><p className="text-[13px] font-semibold">{event.maxTicketsPerWallet} tickets per wallet</p></div>
+                <div className="dp-protocol-rule rounded-xl p-4"><p className="mb-1 text-[10px] uppercase tracking-[0.12em]" style={{ color: 'var(--text-muted)' }}>Resale price cap</p><p className="text-[13px] font-semibold">{getResalePriceCap()} of original price</p></div>
+                <div className="dp-protocol-rule rounded-xl p-4"><p className="mb-1 text-[10px] uppercase tracking-[0.12em]" style={{ color: 'var(--text-muted)' }}>Resale deadline</p><p className="text-[13px] font-semibold">{getResaleDeadline()}</p></div>
               </div>
-              <div className="space-y-3">
-                <div className="dp-protocol-rule">
-                  <p className="text-[11px] mb-0.5" style={{ color: 'var(--text-muted)' }}>Purchase limit</p>
-                  <p className="text-[14px] font-semibold">{event.maxTicketsPerWallet} tickets per wallet</p>
-                </div>
-                <div className="dp-protocol-rule">
-                  <p className="text-[11px] mb-0.5" style={{ color: 'var(--text-muted)' }}>Resale price cap</p>
-                  <p className="text-[14px] font-semibold">{getResalePriceCap()} of original price</p>
-                </div>
-                <div className="dp-protocol-rule">
-                  <p className="text-[11px] mb-0.5" style={{ color: 'var(--text-muted)' }}>Resale deadline</p>
-                  <p className="text-[14px] font-semibold">{getResaleDeadline()}</p>
-                </div>
-              </div>
-            </div>
+            </section>
 
-            {/* Trust section */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               {[
                 { icon: <CheckCircle2 size={14} />, label: 'Verified Organizer' },
                 { icon: <Shield size={14} />, label: 'On-chain Ticket' },
                 { icon: <ArrowLeftRight size={14} />, label: 'Official Resale' },
                 { icon: <QrCode size={14} />, label: 'Dynamic QR Entry' },
               ].map((item, i) => (
-                <div key={i} className="flex items-center gap-2 py-3 px-4 rounded-lg" style={{ backgroundColor: 'var(--surface)' }}>
-                  <span style={{ color: 'var(--accent)' }}>{item.icon}</span>
-                  <span className="text-[12px] font-medium">{item.label}</span>
-                </div>
+                <div key={i} className="flex items-center gap-2 rounded-xl border px-3 py-3" style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}><span style={{ color: 'var(--accent)' }}>{item.icon}</span><span className="text-[11px] font-medium">{item.label}</span></div>
               ))}
             </div>
           </div>
 
-          {/* Right: Purchase Sidebar */}
-          <div className="lg:col-span-1">
-            <div className="dp-surface p-6 lg:sticky lg:top-[88px] lg:self-start">
-              <div className="mb-5">
-                <p className="text-[11px] mb-1" style={{ color: 'var(--text-muted)' }}>
-                  {getPriceRange().single > 0 ? 'Price per ticket' : 'Price range'}
-                </p>
-                {getPriceRange().single > 0 ? (
-                  <>
-                    <p className="text-[28px] font-semibold tracking-[-0.02em]">
-                      {formatIDR(getPriceRange().single)}
-                    </p>
-                    {event.ticketTypes.length > 0 && event.ticketTypes[0].pricePOL && (
-                      <p className="text-[11px] mt-1" style={{ color: 'var(--text-muted)' }}>
-                        ≈ {event.ticketTypes[0].pricePOL} POL
-                      </p>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    <p className="text-[28px] font-semibold tracking-[-0.02em]">
-                      {formatIDR(getPriceRange().min)} - {formatIDR(getPriceRange().max)}
-                    </p>
-                    <p className="text-[11px] mt-1" style={{ color: 'var(--text-muted)' }}>
-                      Multiple ticket types available
-                    </p>
-                  </>
-                )}
+          <aside className="lg:col-span-1">
+            <div className="dp-surface overflow-hidden rounded-2xl lg:sticky lg:top-24">
+              <div className="p-6">
+                <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em]" style={{ color: 'var(--accent)' }}>{getPriceRange().single > 0 ? 'Price per ticket' : 'Price range'}</p>
+                {getPriceRange().single > 0 ? <><p className="text-3xl font-semibold tracking-[-0.05em]">{formatIDR(getPriceRange().single)}</p>{event.ticketTypes.length > 0 && event.ticketTypes[0].pricePOL && <p className="mt-1 text-[11px]" style={{ color: 'var(--text-muted)' }}>≈ {event.ticketTypes[0].pricePOL} POL</p>}</> : <><p className="text-2xl font-semibold tracking-[-0.04em]">{formatIDR(getPriceRange().min)} - {formatIDR(getPriceRange().max)}</p><p className="mt-1 text-[11px]" style={{ color: 'var(--text-muted)' }}>Multiple ticket types available</p></>}
               </div>
-
-              <hr className="dp-divider mb-5" />
-
-              <div className="space-y-3 mb-5">
-                <div className="flex justify-between text-[13px]">
-                  <span style={{ color: 'var(--text-secondary)' }}>Total tickets</span>
-                  <span className="font-medium">{event.maxTickets}</span>
-                </div>
-                <div className="flex justify-between text-[13px]">
-                  <span style={{ color: 'var(--text-secondary)' }}>Sold</span>
-                  <span className="font-medium">{event.ticketsSold}</span>
-                </div>
-                <div className="flex justify-between text-[13px]">
-                  <span style={{ color: 'var(--text-secondary)' }}>Remaining</span>
-                  <span className="font-medium" style={{ color: ticketsRemaining > 0 ? 'var(--success)' : 'var(--error)' }}>
-                    {ticketsRemaining}
-                  </span>
-                </div>
+              <div className="border-y px-6 py-5" style={{ borderColor: 'var(--border)', backgroundColor: 'var(--surface-elevated)' }}>
+                <div className="mb-3 flex justify-between text-[12px]"><span style={{ color: 'var(--text-secondary)' }}>Total tickets</span><span className="font-medium">{event.maxTickets}</span></div>
+                <div className="mb-3 flex justify-between text-[12px]"><span style={{ color: 'var(--text-secondary)' }}>Sold</span><span className="font-medium">{event.ticketsSold}</span></div>
+                <div className="mb-4 flex justify-between text-[12px]"><span style={{ color: 'var(--text-secondary)' }}>Remaining</span><span className="font-semibold" style={{ color: ticketsRemaining > 0 ? 'var(--success)' : 'var(--error)' }}>{ticketsRemaining}</span></div>
+                <div className="dp-progress"><div className="dp-progress-fill" style={{ width: `${soldPercentage}%` }} /></div>
               </div>
-
-              {/* Progress */}
-              <div className="dp-progress mb-6">
-                <div className="dp-progress-fill" style={{ width: `${soldPercentage}%` }} />
+              <div className="p-6">
+                {!isConnected ? <div className="rounded-xl p-4 text-center" style={{ backgroundColor: 'var(--surface-elevated)' }}><p className="mb-3 text-[12px]" style={{ color: 'var(--text-secondary)' }}>Connect your wallet to purchase</p><button onClick={() => router.push('/')} className="dp-btn-primary w-full">Connect Wallet</button></div> : event.isCancelled ? <div className="rounded-xl p-4 text-center" style={{ backgroundColor: 'var(--error-muted)' }}><p className="text-[13px] font-medium" style={{ color: 'var(--error)' }}>Event Cancelled</p><p className="mt-1 text-[11px]" style={{ color: 'var(--text-muted)' }}>If you purchased tickets, you can claim a refund.</p></div> : !canPurchase ? <div className="rounded-xl p-4 text-center" style={{ backgroundColor: 'var(--surface-elevated)' }}><p className="text-[13px]" style={{ color: 'var(--text-muted)' }}>{isSoldOut ? 'Sold Out' : 'Tickets not available'}</p></div> : <div className="space-y-3"><button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); router.push(`/events/${eventId}/purchase`); }} className="dp-btn-primary w-full text-[14px] font-medium" style={{ padding: '14px 24px' }}>Buy Ticket</button><a href={`https://amoy.polygonscan.com/address/${process.env.NEXT_PUBLIC_CONTRACT_ADDRESS}`} target="_blank" rel="noopener noreferrer" className="dp-btn-secondary flex w-full items-center justify-center gap-2 text-[13px]" style={{ padding: '12px 24px' }}><ExternalLink size={14} /><span>View on Blockchain</span></a></div>}
               </div>
-
-              {/* CTA */}
-              {!isConnected ? (
-                <div className="text-center py-4 px-4 rounded-lg" style={{ backgroundColor: 'var(--surface-elevated)' }}>
-                  <p className="text-[13px] mb-3" style={{ color: 'var(--text-secondary)' }}>
-                    Connect your wallet to purchase
-                  </p>
-                  <button onClick={() => router.push('/')} className="dp-btn-primary w-full">
-                    Connect Wallet
-                  </button>
-                </div>
-              ) : event.isCancelled ? (
-                <div className="text-center py-4 px-4 rounded-lg" style={{ backgroundColor: 'var(--error-muted)' }}>
-                  <p className="text-[13px]" style={{ color: 'var(--error)' }}>Event Cancelled</p>
-                  <p className="text-[11px] mt-1" style={{ color: 'var(--text-muted)' }}>
-                    If you purchased tickets, you can claim a refund.
-                  </p>
-                </div>
-              ) : !canPurchase ? (
-                <div className="text-center py-4 px-4 rounded-lg" style={{ backgroundColor: 'var(--surface-elevated)' }}>
-                  <p className="text-[13px]" style={{ color: 'var(--text-muted)' }}>
-                    {isSoldOut ? 'Sold Out' : 'Tickets not available'}
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      router.push(`/events/${eventId}/purchase`);
-                    }}
-                    className="dp-btn-primary w-full text-[14px] font-medium"
-                    style={{ padding: '14px 24px' }}
-                  >
-                    Buy Ticket
-                  </button>
-                  <a
-                    href={`https://amoy.polygonscan.com/address/${process.env.NEXT_PUBLIC_CONTRACT_ADDRESS}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="dp-btn-secondary w-full text-[13px] flex items-center justify-center gap-2"
-                    style={{ padding: '12px 24px' }}
-                  >
-                    <ExternalLink size={14} /> 
-                    <span>View on Blockchain</span>
-                  </a>
-                </div>
-              )}
             </div>
-          </div>
+          </aside>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

@@ -150,10 +150,10 @@ export default function GateOfficersPage() {
   }
 
   return (
-    <div className="min-h-screen pt-[72px] pb-16 px-4">
-      <div className="dp-container max-w-[1000px]">
+    <div className="min-h-screen pt-24 pb-20 px-4">
+      <div className="dp-container max-w-[1120px]">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-9 border-b pb-7" style={{ borderColor: 'var(--border)' }}>
           <button
             onClick={() => router.push('/admin')}
             className="dp-btn-ghost mb-3"
@@ -161,11 +161,11 @@ export default function GateOfficersPage() {
           >
             <ArrowLeft size={14} /> Back to Admin
           </button>
-          <div className="flex items-center gap-3 mb-2">
-            <Shield size={28} style={{ color: 'var(--accent)' }} />
-            <h1 className="text-[28px] font-semibold tracking-[-0.02em]">Gate Officer Management</h1>
+          <div className="flex items-center gap-3 mb-3">
+            <Shield size={25} style={{ color: 'var(--accent)' }} />
+            <h1 className="text-[28px] md:text-[40px] font-semibold tracking-[-0.04em]">Gate Officer Management</h1>
           </div>
-          <p className="text-[14px]" style={{ color: 'var(--text-secondary)' }}>
+          <p className="text-[14px] md:text-[15px] max-w-2xl" style={{ color: 'var(--text-secondary)' }}>
             Manage authorized personnel who can scan and redeem tickets at event gates.
           </p>
         </div>
@@ -200,14 +200,14 @@ export default function GateOfficersPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-5">
           {/* Add New Gate Officer */}
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.06em] mb-3" style={{ color: 'var(--text-muted)' }}>
               Add Gate Officer
             </p>
-            <div className="dp-surface p-6">
-              <div className="flex items-center gap-3 mb-4">
+            <div className="dp-surface p-5 md:p-7">
+              <div className="flex items-center gap-3 mb-5 border-b pb-4" style={{ borderColor: 'var(--border)' }}>
                 <Plus size={20} style={{ color: 'var(--accent)' }} />
                 <h3 className="text-[16px] font-semibold">Authorize New Officer</h3>
               </div>
@@ -221,7 +221,7 @@ export default function GateOfficersPage() {
                   value={newOfficerAddress}
                   onChange={(e) => setNewOfficerAddress(e.target.value)}
                   placeholder="0x..."
-                  className="w-full px-4 py-3 rounded-lg font-mono text-[13px]"
+                  className="dp-input font-mono text-[13px]"
                   style={{
                     backgroundColor: 'var(--surface)',
                     border: '1px solid var(--border)',
@@ -264,8 +264,8 @@ export default function GateOfficersPage() {
             <p className="text-[11px] font-semibold uppercase tracking-[0.06em] mb-3" style={{ color: 'var(--text-muted)' }}>
               Check Officer Status
             </p>
-            <div className="dp-surface p-6">
-              <div className="flex items-center gap-3 mb-4">
+            <div className="dp-surface p-5 md:p-7">
+              <div className="flex items-center gap-3 mb-5 border-b pb-4" style={{ borderColor: 'var(--border)' }}>
                 <UserCheck size={20} style={{ color: 'var(--accent)' }} />
                 <h3 className="text-[16px] font-semibold">Verify Authorization</h3>
               </div>
@@ -279,7 +279,7 @@ export default function GateOfficersPage() {
                   value={checkingAddress}
                   onChange={(e) => setCheckingAddress(e.target.value)}
                   placeholder="0x..."
-                  className="w-full px-4 py-3 rounded-lg font-mono text-[13px]"
+                  className="dp-input font-mono text-[13px]"
                   style={{
                     backgroundColor: 'var(--surface)',
                     border: '1px solid var(--border)',
@@ -311,7 +311,7 @@ export default function GateOfficersPage() {
             <p className="text-[11px] font-semibold uppercase tracking-[0.06em] mb-3" style={{ color: 'var(--text-muted)' }}>
               Checked Officers ({officers.length})
             </p>
-            <div className="dp-surface">
+            <div className="dp-surface overflow-hidden">
               {officers.map((officer, index) => (
                 <div
                   key={officer.address}
@@ -359,7 +359,7 @@ export default function GateOfficersPage() {
         )}
 
         {/* Instructions */}
-        <div className="mt-8 dp-surface p-6">
+        <div className="mt-9 dp-surface p-5 md:p-7">
           <h3 className="text-[16px] font-semibold mb-4 flex items-center gap-2">
             <Shield size={18} style={{ color: 'var(--accent)' }} />
             How Gate Officer Authorization Works

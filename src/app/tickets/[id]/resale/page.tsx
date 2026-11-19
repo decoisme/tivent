@@ -302,9 +302,9 @@ export default function ResaleManagementPage() {
   const resaleDeadlinePassed = Math.floor(Date.now() / 1000) > ticket.eventData!.resaleDeadline;
 
   return (
-    <div className="min-h-screen py-8 px-4 page-enter-active relative" style={{ backgroundColor: 'var(--bg)' }}>
-      {/* Ticket Decoration - Left Side with Scalloped Edge */}
-      <div className="fixed left-0 top-0 bottom-0 w-8 pointer-events-none hidden lg:block">
+    <main className="min-h-screen px-4 pb-20 pt-24 page-enter-active" style={{ backgroundColor: 'var(--bg)' }}>
+      {/* Ticket edge ornaments are omitted here to keep focus on listing controls. */}
+      <div className="hidden">
         <svg
           className="w-full h-full"
           viewBox="0 0 32 1000"
@@ -472,8 +472,7 @@ export default function ResaleManagementPage() {
         </svg>
       </div>
 
-      {/* Ticket Decoration - Right Side with Scalloped Edge (Mirror) */}
-      <div className="fixed right-0 top-0 bottom-0 w-8 pointer-events-none hidden lg:block">
+      <div className="hidden">
         <svg
           className="w-full h-full"
           viewBox="0 0 32 1000"
@@ -641,28 +640,13 @@ export default function ResaleManagementPage() {
         </svg>
       </div>
 
-      <div className="dp-container max-w-5xl mx-auto relative z-10">
-        {/* Compact Header */}
-        <div className="flex items-center justify-between mb-6">
-          <button
-            onClick={() => router.push(`/tickets/${tokenId}`)}
-            className="flex items-center gap-2 text-[13px] transition-opacity hover:opacity-80"
-            style={{ color: 'var(--text-secondary)' }}
-          >
-            <ArrowLeft size={14} />
-            Back
-          </button>
-          <div className="flex items-center gap-2">
-            {ticket.listingData?.active && (
-              <span className="px-2 py-1 rounded text-[11px] font-medium" style={{ backgroundColor: 'var(--primary-bg)', color: 'var(--primary)' }}>
-                Listed
-              </span>
-            )}
-          </div>
+      <div className="dp-container relative z-10 mx-auto max-w-6xl">
+        <div className="mb-8 flex items-center justify-between border-b pb-5" style={{ borderColor: 'var(--border)' }}>
+          <button onClick={() => router.push(`/tickets/${tokenId}`)} className="dp-btn-ghost" style={{ padding: '4px 0', color: 'var(--text-muted)' }}><ArrowLeft size={14} /> Return to ticket</button>
+          {ticket.listingData?.active && <span className="rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-wider" style={{ backgroundColor: 'var(--accent-muted)', color: 'var(--accent)' }}>Listed on exchange</span>}
         </div>
-
-        {/* Compact Grid Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6 items-start">
+        <header className="mb-8 max-w-3xl"><p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.18em]" style={{ color: 'var(--accent)' }}>Ticket #{ticket.tokenId} · resale controls</p><h1 className="text-3xl font-semibold tracking-[-0.045em] md:text-5xl">Pass it on, fairly.</h1><p className="mt-3 text-sm leading-6" style={{ color: 'var(--text-secondary)' }}>Set a transparent asking price within this event’s resale cap. Your ticket stays yours until a buyer completes the exchange.</p></header>
+        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
           {/* Main Content */}
           <div className="space-y-4">
             {/* Ticket Info Card - Compact */}
@@ -988,6 +972,6 @@ export default function ResaleManagementPage() {
           </div>
         </div>
       </div>
-    </div>
+    </main>
   );
 }
